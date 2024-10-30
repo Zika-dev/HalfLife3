@@ -11,6 +11,7 @@ public class playerController : MonoBehaviour
     public Camera camera;
 
     public float thrust = 1.0f;
+    bool movementEnabled = true;
 
     public ParticleSystem thruster1;
     public ParticleSystem thruster2;
@@ -25,6 +26,16 @@ public class playerController : MonoBehaviour
 
     private bool canRelease = false;
     private bool canAttract = true;
+
+    public void disableMovement()
+    {
+        movementEnabled = false;
+    }
+
+    public void enableMovement()
+    {
+        movementEnabled = true;
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -147,6 +158,19 @@ public class playerController : MonoBehaviour
 
     void updateMovement()
     {
+        // Lock rotation
+        rb2D.rotation = 0;
+        transform.eulerAngles = new Vector3(0, 0, 0);
+
+        if (!movementEnabled) {
+            thruster1.Stop();
+            thruster2.Stop();
+            thruster3.Stop();
+            thruster4.Stop();
+
+            return;
+        };
+
         if (Input.GetKey(KeyCode.W))
         {
             rb2D.AddForce(transform.up * thrust);
@@ -191,14 +215,12 @@ public class playerController : MonoBehaviour
         {
             thruster1.Stop();
         }
-
-        // Lock rotation
-        rb2D.rotation = 0;
-        transform.eulerAngles = new Vector3(0, 0, 0);
     }
 
     void Update()
     {
+        if (!movementEnabled) return;
+
         updateArm();
     }
 
