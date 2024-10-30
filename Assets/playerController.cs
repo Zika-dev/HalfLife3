@@ -42,7 +42,8 @@ public class playerController : MonoBehaviour
     {
         // Update the target position to follow the mouse
         mousePos = camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f));
-        armTarget.position = mousePos;
+        // Lerp arm target position to mouse position
+        armTarget.position = Vector3.Lerp(armTarget.position, mousePos, 0.05f);
 
         Vector2 direction = (armTip.position - rotationPoint.position).normalized;
 

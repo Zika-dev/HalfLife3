@@ -21817,11 +21817,12 @@ MonoBehaviour:
   armTip: {fileID: 656776705}
   rotationPoint: {fileID: 1236572659}
   camera: {fileID: 1996652280}
-  thrust: 5
+  thrust: 15
   thruster1: {fileID: 1054005575}
   thruster2: {fileID: 916318284}
   thruster3: {fileID: 1735846238}
   thruster4: {fileID: 417761688}
+  range: 2
 --- !u!50 &7513207770202613610
 Rigidbody2D:
   serializedVersion: 5
