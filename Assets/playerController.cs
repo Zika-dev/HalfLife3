@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class playerController : MonoBehaviour
 {
@@ -18,8 +19,12 @@ public class playerController : MonoBehaviour
 
     private Vector3 mousePos;
 
+    public float range = 2.0f;
     private bool lockedItem = false;
     GameObject lockedObject;
+
+    private bool canRelease = false;
+    private bool canAttract = true;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -33,12 +38,10 @@ public class playerController : MonoBehaviour
         thruster4.Stop();
     }
 
-
     void updateArm()
     {
-        // Put target at mouse position
-        mousePos = camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f)); // mouse position in world space
-
+        // Update the target position to follow the mouse
+        mousePos = camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f));
         armTarget.position = mousePos;
 
         Vector2 direction = (armTip.position - rotationPoint.position).normalized;
@@ -48,56 +51,95 @@ public class playerController : MonoBehaviour
 
         if (lockedItem)
         {
+            // Hold object at the arm tip
             lockedObject.transform.position = armTip.position;
             Rigidbody2D rigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
-            rigidbody2D.simulated = false;
+            rigidbody2D.simulated = false;  // Disable physics simulation while holding
         }
 
-        // Attract nearby objects with tag "Interactable" that has a rigidbody2D
+        // Check if the player has released the right mouse button
+        if (Input.GetMouseButtonUp(1))
+        {
+            canRelease = true;
+            canAttract = true;
+        }
+
+        // Right mouse button pressed for attracting or releasing objects
         if (Input.GetMouseButton(1))
         {
-            if (!lockedItem)
+            // Attraction mode if there's no locked item, attraction is allowed, and the mouse is still held
+            if (!lockedItem && canAttract)
             {
-                GameObject[] interactableObjects = GameObject.FindGameObjectsWithTag("Interactable");
-
-                // Loop through each object and get their Transform component
-                foreach (GameObject obj in interactableObjects)
+                // Shoot raycast from arm tip
+                RaycastHit2D hit = Physics2D.Raycast(armTip.position, direction, 10.0f);
+                if (hit.collider != null && hit.collider.CompareTag("Interactable"))
                 {
-                    Transform objTransform = obj.transform;
+                    GameObject obj = hit.collider.gameObject;
                     Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
-                    if (rigidbody2D != null)
-                    {
-                        float distance = Vector2.Distance(armTip.position, objTransform.position);
-                        if (distance < 5)
-                        {
-                            if (distance < 1) // Lock object to the arm tip
-                            {
-                                lockedItem = true;
-                                lockedObject = obj;
-                            }
-                            else
-                            {
-                                Vector2 directionToObject = (objTransform.position - armTip.position);
-                                Vector2 directionToObjectNormalized = directionToObject.normalized;
-                                float force = 10.0f / distance;
-                                rigidbody2D.AddForce(-directionToObjectNormalized * force);
+                    if (rigidbody2D == null) return;
 
-                                Debug.DrawRay(armTip.position, directionToObject, Color.blue);
-                            }
-                        }
+                    float distance = Vector2.Distance(armTip.position, obj.transform.position);
+
+                    // Apply attraction force if within range
+                    if (distance < range && distance > 1)
+                    {
+                        Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
+                        float force = 10.0f / distance;
+                        rigidbody2D.AddForce(-directionToObject * force);
+
+                        Debug.DrawRay(armTip.position, directionToObject, Color.blue);
+                    }
+                    // Lock object if within very close range
+                    else if (distance < 1)
+                    {
+                        lockedObject = obj;
+                        lockedItem = true;
+                        canRelease = false;  // Require mouse release before allowing release
+                        Debug.Log("Object locked");
                     }
                 }
             }
+            else if (lockedItem && canRelease)  // Release locked object if allowed
+            {
+                Debug.Log("Release object");
+                Rigidbody2D lockedRigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
+                lockedRigidbody2D.simulated = true;  // Re-enable physics
+                lockedRigidbody2D.linearVelocity = Vector2.zero;
+                lockedRigidbody2D.AddForce(direction * 1.0f, ForceMode2D.Impulse);
+                lockedObject = null;
+                lockedItem = false;
+                canAttract = false;  // Require mouse release before re-attracting
+            }
         }
 
-        if (Input.GetMouseButton(0)) // Shoot object away from the arm tip
+        // Left mouse button to shoot the object away from the arm tip
+        if (Input.GetMouseButton(0))
         {
-            if (lockedItem)
+            float distance = 0.0f;
+            Rigidbody2D lockedRigidbody2D = null;
+            if (lockedItem && canRelease)
+                lockedRigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
+            else // Shoot raycast from arm tip
             {
-                Rigidbody2D lockedRigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
+                RaycastHit2D hit = Physics2D.Raycast(armTip.position, direction, 10.0f);
+                if (hit.collider != null && hit.collider.CompareTag("Interactable"))
+                {
+                    GameObject obj = hit.collider.gameObject;
+                    lockedRigidbody2D = obj.GetComponent<Rigidbody2D>();
+                    if (lockedRigidbody2D == null) return;
+
+                    distance = Vector2.Distance(armTip.position, obj.transform.position);
+                }
+            }
+            if (lockedRigidbody2D != null && distance < range)
+            {
+                Debug.Log(distance);
                 lockedRigidbody2D.simulated = true;
+                lockedRigidbody2D.linearVelocity = Vector2.zero;
                 lockedRigidbody2D.AddForce(direction * 25.0f, ForceMode2D.Impulse);
+                lockedObject = null;
                 lockedItem = false;
+                canAttract = false;  // Prevent immediate re-attraction
             }
         }
     }
@@ -154,10 +196,13 @@ public class playerController : MonoBehaviour
         transform.eulerAngles = new Vector3(0, 0, 0);
     }
 
-    void FixedUpdate()
+    void Update()
+    {
+        updateArm();
+    }
+
+    private void FixedUpdate()
     {
         updateMovement();
-
-        updateArm();
     }
 }
