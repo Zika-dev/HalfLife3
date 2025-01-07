@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class playerController : MonoBehaviour
 {
+    [SerializeField] FieldOfView fieldOfView;
 
     private Rigidbody2D rb2D;
     public Transform armTarget;
@@ -12,14 +13,22 @@ public class playerController : MonoBehaviour
 
     public float thrust = 1.0f;
 
+    ParticleSystem targetParticles;
+
     public ParticleSystem thruster1;
     public ParticleSystem thruster2;
     public ParticleSystem thruster3;
     public ParticleSystem thruster4;
+    public GameObject thrusterLight1;
+    public GameObject thrusterLight2;
+    public GameObject thrusterLight3;
+    public GameObject thrusterLight4;
 
     private Vector3 mousePos;
 
-    public float range = 2.0f;
+    public float range = 3.0f;
+    public float lockRange = 0.1f;
+    public float attractStrength = 1f;
     private bool lockedItem = false;
     GameObject lockedObject;
 
@@ -63,6 +72,7 @@ public class playerController : MonoBehaviour
         {
             canRelease = true;
             canAttract = true;
+            targetParticles.Stop();
         }
 
         // Right mouse button pressed for attracting or releasing objects
@@ -78,21 +88,25 @@ public class playerController : MonoBehaviour
                     GameObject obj = hit.collider.gameObject;
                     Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
                     if (rigidbody2D == null) return;
+                    targetParticles = obj.GetComponentInChildren<ParticleSystem>();
+                    
 
                     float distance = Vector2.Distance(armTip.position, obj.transform.position);
 
                     // Apply attraction force if within range
-                    if (distance < range && distance > 1)
+                    if (distance < range && distance > lockRange)
                     {
+                        targetParticles.Play();
                         Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
-                        float force = 10.0f / distance;
-                        rigidbody2D.AddForce(-directionToObject * force);
+                        float force = attractStrength / distance;
+                        rigidbody2D.linearVelocity = -directionToObject * force;
 
                         Debug.DrawRay(armTip.position, directionToObject, Color.blue);
                     }
                     // Lock object if within very close range
-                    else if (distance < 1)
+                    else if (distance < lockRange)
                     {
+                        targetParticles.Stop();
                         lockedObject = obj;
                         lockedItem = true;
                         canRelease = false;  // Require mouse release before allowing release
@@ -111,6 +125,10 @@ public class playerController : MonoBehaviour
                 lockedItem = false;
                 canAttract = false;  // Require mouse release before re-attracting
             }
+        }
+        if (Input.GetMouseButtonUp(1))
+        {
+            
         }
 
         // Left mouse button to shoot the object away from the arm tip
@@ -151,45 +169,53 @@ public class playerController : MonoBehaviour
         {
             rb2D.AddForce(transform.up * thrust);
             thruster4.Play();
+            thrusterLight4.SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.S))
         {
             rb2D.AddForce(-transform.up * thrust);
             thruster2.Play();
+            thrusterLight2.SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.A))
         {
             rb2D.AddForce(-transform.right * thrust);
             thruster3.Play();
+            thrusterLight3.SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.D))
         {
             rb2D.AddForce(transform.right * thrust);
             thruster1.Play();
+            thrusterLight1.SetActive(true);
         }
 
         // Stop all particle systems
         if (!Input.GetKey(KeyCode.W))
         {
             thruster4.Stop();
+            thrusterLight4.SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.S))
         {
             thruster2.Stop();
+            thrusterLight2.SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.A))
         {
             thruster3.Stop();
+            thrusterLight3.SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.D))
         {
             thruster1.Stop();
+            thrusterLight1.SetActive(false);
         }
 
         // Lock rotation
@@ -200,6 +226,8 @@ public class playerController : MonoBehaviour
     void Update()
     {
         updateArm();
+
+        fieldOfView.SetOrigin(transform.position);
     }
 
     private void FixedUpdate()
