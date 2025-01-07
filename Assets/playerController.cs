@@ -1,3 +1,4 @@
+using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -89,14 +90,16 @@ public class playerController : MonoBehaviour
                     Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
                     if (rigidbody2D == null) return;
                     targetParticles = obj.GetComponentInChildren<ParticleSystem>();
-                    
 
                     float distance = Vector2.Distance(armTip.position, obj.transform.position);
-
                     // Apply attraction force if within range
                     if (distance < range && distance > lockRange)
                     {
-                        targetParticles.Play();
+                        Debug.DrawLine(armTip.position, hit.point, Color.magenta);
+                        targetParticles.transform.position = hit.point;
+                        if(!targetParticles.isPlaying)
+                            targetParticles.Play();
+
                         Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
                         float force = attractStrength / distance;
                         rigidbody2D.linearVelocity = -directionToObject * force;
