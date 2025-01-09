@@ -119,6 +119,37 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &99934815
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 99934816}
+  m_Layer: 0
+  m_Name: Patrol Point (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &99934816
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 99934815}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -12.55, y: 3.0243726, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &255830745
 GameObject:
   m_ObjectHideFlags: 0
@@ -5691,6 +5722,38 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &870710485
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 870710486}
+  m_Layer: 0
+  m_Name: Enemy
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &870710486
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 870710485}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.86311597, y: 1.8169532, z: 0.00698369}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1434370653580053717}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &916318282
@@ -15513,6 +15576,37 @@ ParticleSystem:
         m_PostInfinity: 2
         m_RotationOrder: 4
     vectorLabel1_3: W
+--- !u!1 &1101514561
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1101514562}
+  m_Layer: 0
+  m_Name: Patrol Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1101514562
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1101514561}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 11.88, y: 3.0243726, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1206227082
 GameObject:
   m_ObjectHideFlags: 0
@@ -21038,7 +21132,7 @@ Camera:
   far clip plane: 1000
   field of view: 60
   orthographic: 0
-  orthographic size: 0.97
+  orthographic size: 1.2933333
   m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
@@ -21278,23 +21372,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &747163452593142958
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1915838431967880397}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.9713, y: 2.45, z: 0}
-  m_LocalScale: {x: 0.39914617, y: 0.39914617, z: 0.39914617}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 1434370653580053717}
-  - {fileID: 3782634664559172836}
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!212 &1220512864972006096
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -21359,11 +21436,12 @@ Transform:
   m_GameObject: {fileID: 7236573077519680706}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -7.33, y: 5.5699997, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -5.760157, y: 2.8562908, z: -0.00698369}
+  m_LocalScale: {x: 0.39914617, y: 0.39914617, z: 0.39914617}
   m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 747163452593142958}
+  m_Children:
+  - {fileID: 3782634664559172836}
+  m_Father: {fileID: 870710486}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &1670789331617830674
 Transform:
@@ -21436,52 +21514,6 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
---- !u!1 &1915838431967880397
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 747163452593142958}
-  - component: {fileID: 1915838431967880398}
-  m_Layer: 0
-  m_Name: irisEnemy
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1915838431967880398
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1915838431967880397}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01570ab43ae5edd4c93eefe191e93a61, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  target: {fileID: 7513207770202613608}
-  body: {fileID: 1434370653580053717}
-  rb: {fileID: 7236573077519680707}
-  aimSpeed: 5
-  maxAimDistance: 60
-  maxFollowDistance: 200
-  movementSpeed: 20
-  turnSpeed: 5
-  targetAngularVelocity: 1
-  forearm: {fileID: 2258503625132343547}
-  forearmJoint: {fileID: 8401091305031755737}
-  axle: {fileID: 2030302468}
-  muzzle: {fileID: 1696335052}
-  hitLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  thrusters: []
 --- !u!212 &1963345402089819315
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -21583,7 +21615,7 @@ Transform:
   m_GameObject: {fileID: 8401091305031755736}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 6.22, y: -0.18500042, z: 0}
+  m_LocalPosition: {x: 6.2199993, y: -0.185, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -21848,13 +21880,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2221334429823552869}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -3.3650002, y: 5.65, z: 0}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.38, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2258503625132343547}
-  m_Father: {fileID: 747163452593142958}
+  m_Father: {fileID: 1434370653580053717}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!50 &3782634664559172837
 Rigidbody2D:
@@ -21870,7 +21902,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 0.1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0.2
   m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -21881,7 +21913,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 0
 --- !u!61 &3782634664559172838
 BoxCollider2D:
@@ -21943,9 +21975,9 @@ HingeJoint2D:
   m_BreakForce: Infinity
   m_BreakTorque: Infinity
   m_BreakAction: 3
-  m_AutoConfigureConnectedAnchor: 1
-  m_Anchor: {x: -1.66, y: -0.17}
-  m_ConnectedAnchor: {x: 2.3049996, y: -0.08999962}
+  m_AutoConfigureConnectedAnchor: 0
+  m_Anchor: {x: -2.367445, y: -0.17789984}
+  m_ConnectedAnchor: {x: 0.012555697, y: -0.17790025}
   m_UseConnectedAnchor: 1
   m_UseMotor: 0
   m_Motor:
@@ -21953,8 +21985,8 @@ HingeJoint2D:
     m_MaximumMotorForce: 10000
   m_UseLimits: 1
   m_AngleLimits:
-    m_LowerAngle: -60
-    m_UpperAngle: 60
+    m_LowerAngle: 360
+    m_UpperAngle: 0
 --- !u!1 &4808082677686196023
 GameObject:
   m_ObjectHideFlags: 0
@@ -22217,6 +22249,7 @@ GameObject:
   - component: {fileID: 1220512864972006096}
   - component: {fileID: 7236573077519680707}
   - component: {fileID: 7236573077519680708}
+  - component: {fileID: 7236573077519680709}
   m_Layer: 0
   m_Name: body
   m_TagString: Untagged
@@ -22250,7 +22283,7 @@ Rigidbody2D:
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!58 &7236573077519680708
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -22287,6 +22320,33 @@ CircleCollider2D:
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
   m_Radius: 2.46
+--- !u!114 &7236573077519680709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7236573077519680706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bb573e2e7db53441babceb7828e2bf9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 7513207770202613608}
+  detectionRange: 10
+  shoulder: {fileID: 3782634664559172836}
+  forearm: {fileID: 2258503625132343547}
+  patrolPoints:
+  - {fileID: 1101514562}
+  - {fileID: 99934816}
+  roamingSpeed: 4
+  waitTime: 1
+  arrivalThreshold: 0.1
+  engagedSpeed: 0
+  optimalShootingDistance: 15
+  shootingRangeMargin: 1
+  armRotationSpeed: 3
+  shootingInterval: 1
 --- !u!4 &7307791295009002005
 Transform:
   m_ObjectHideFlags: 0
@@ -22542,9 +22602,9 @@ HingeJoint2D:
   m_BreakForce: Infinity
   m_BreakTorque: Infinity
   m_BreakAction: 3
-  m_AutoConfigureConnectedAnchor: 1
-  m_Anchor: {x: 0, y: 0}
-  m_ConnectedAnchor: {x: 6.2199993, y: -0.18500002}
+  m_AutoConfigureConnectedAnchor: 0
+  m_Anchor: {x: -3.84, y: 0}
+  m_ConnectedAnchor: {x: 2.3799994, y: -0.18500002}
   m_UseConnectedAnchor: 1
   m_UseMotor: 0
   m_Motor:
@@ -22552,8 +22612,8 @@ HingeJoint2D:
     m_MaximumMotorForce: 10000
   m_UseLimits: 1
   m_AngleLimits:
-    m_LowerAngle: -90
-    m_UpperAngle: 90
+    m_LowerAngle: -140
+    m_UpperAngle: 140
 --- !u!50 &8401091305031755738
 Rigidbody2D:
   serializedVersion: 5
@@ -22568,7 +22628,7 @@ Rigidbody2D:
   m_UseAutoMass: 0
   m_Mass: 0.1
   m_LinearDamping: 0
-  m_AngularDamping: 0.05
+  m_AngularDamping: 0
   m_GravityScale: 1
   m_Material: {fileID: 0}
   m_IncludeLayers:
@@ -22579,7 +22639,7 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 0
 --- !u!61 &8401091305031755739
 BoxCollider2D:
@@ -22656,4 +22716,6 @@ SceneRoots:
   - {fileID: 1206227086}
   - {fileID: 952125854}
   - {fileID: 761393122}
-  - {fileID: 747163452593142958}
+  - {fileID: 870710486}
+  - {fileID: 1101514562}
+  - {fileID: 99934816}
