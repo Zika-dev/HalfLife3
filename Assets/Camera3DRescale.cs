@@ -15,6 +15,8 @@ public class Camera3DRescale : MonoBehaviour
     void Start()
     {
         _3Dcamera.enabled = false;
+        projectionPlane.SetActive(true);
+
         renderTexture.width = Screen.width;
         renderTexture.height = Screen.height;
 
@@ -25,9 +27,7 @@ public class Camera3DRescale : MonoBehaviour
 
         Debug.Log("Screen Width: " + Screen.width + " Screen Height: " + Screen.height);
 
-        Debug.Log("Height: " + height + " Width: " + width);
-
-        projectionPlane.transform.localScale = new Vector3(width / 10, 1, height / 10);
+        projectionPlane.transform.localScale = new Vector3(width / 50, 1, height / 50);
         _3Dcamera.enabled = true;
     }
 

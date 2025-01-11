@@ -1,6 +1,10 @@
+using System;
+using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering.VirtualTexturing;
+using UnityEngine.UIElements;
 
 public class playerController : MonoBehaviour
 {
@@ -10,6 +14,7 @@ public class playerController : MonoBehaviour
     public Transform armTarget;
     public Transform armTip;
     public Transform rotationPoint;
+    public GameObject elbowRaycast;
     public Camera camera;
 
     public float thrust = 1.0f;
@@ -36,6 +41,11 @@ public class playerController : MonoBehaviour
     private bool canRelease = false;
     private bool canAttract = true;
 
+    public LayerMask collisonIgnore;
+
+    public GameObject clipPreventor;
+    public GameObject pivot;
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -47,18 +57,42 @@ public class playerController : MonoBehaviour
         thruster3.Stop();
         thruster4.Stop();
     }
-
     void updateArm()
     {
+
         // Update the target position to follow the mouse
-        mousePos = camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 10.0f));
-        // Lerp arm target position to mouse position
-        armTarget.position = Vector3.Lerp(armTarget.position, mousePos, 0.05f);
+        mousePos = camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 50.0f));
+
+        Vector3 currentDirection = (mousePos - armTarget.position).normalized;
+
+        RaycastHit2D collision = Physics2D.Raycast(armTip.position, currentDirection, 0.25f, ~collisonIgnore);
+
+        Debug.DrawRay(armTip.position, currentDirection, Color.red);
+
+        if (collision.collider != null/* && collision.collider.gameObject.layer != 9 && collision.collider.gameObject.layer != 10*/)
+        {
+            Debug.Log(collision.collider.gameObject.layer);
+            // Smoothly move the solver along the collision surface
+            armTarget.position = Vector3.Lerp(armTarget.position, collision.point, 0.05f);
+        }
+        else
+        {
+            // If no collision, move normally towards the mouse position
+            armTarget.position = Vector3.Lerp(armTarget.position, mousePos, 0.05f);
+        }
+
+        float distanceToArmTip = Vector2.Distance(pivot.transform.position, armTip.position);
+
+        float angle = Mathf.Atan2(armTip.position.y - transform.position.y, armTip.position.x - transform.position.x) * Mathf.Rad2Deg - 90;
+        pivot.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
+
+        clipPreventor.transform.localScale = new Vector3(clipPreventor.transform.localScale.x, distanceToArmTip, 1);
+        clipPreventor.transform.localPosition = new Vector3(0, distanceToArmTip / 2, 0);
 
         Vector2 direction = (armTip.position - rotationPoint.position).normalized;
 
-        Debug.DrawLine(transform.position, armTarget.position, Color.red);
-        Debug.DrawRay(rotationPoint.position, direction, Color.blue);
+        //Debug.DrawLine(transform.position, armTarget.position, Color.red);
+        //Debug.DrawRay(rotationPoint.position, direction, Color.blue);
 
         if (lockedItem)
         {
@@ -101,7 +135,7 @@ public class playerController : MonoBehaviour
                             targetParticles.Play();
 
                         Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
-                        float force = attractStrength / distance;
+                        float force =  attractStrength / distance;
                         rigidbody2D.linearVelocity = -directionToObject * force;
 
                         Debug.DrawRay(armTip.position, directionToObject, Color.blue);

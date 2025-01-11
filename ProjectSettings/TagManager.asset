@@ -15,8 +15,8 @@ TagManager:
   - LightMeshIgnore
   - 2DRender
   - 3DRender
-  - 
-  - 
+  - Interactable
+  - ClipPreventor
   - 
   - 
   - 
