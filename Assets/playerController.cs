@@ -15,6 +15,7 @@ public class playerController : MonoBehaviour
     public float thrust = 1.0f;
 
     ParticleSystem targetParticles;
+    public GameObject repellEffect;
 
     public ParticleSystem thruster1;
     public ParticleSystem thruster2;
@@ -155,6 +156,7 @@ public class playerController : MonoBehaviour
             }
             if (lockedRigidbody2D != null && distance < range)
             {
+                Instantiate(repellEffect, armTip.position, armTip.rotation);
                 Debug.Log(distance);
                 lockedRigidbody2D.simulated = true;
                 lockedRigidbody2D.linearVelocity = Vector2.zero;
