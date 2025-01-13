@@ -80,7 +80,7 @@ public class ChargingPod : MonoBehaviour
         if (!playerLocked && !playerExiting) { 
             if (beginChargeZone.IsTouching(player.GetComponent<Collider2D>()))
             {
-                playerController.disableMovement();
+                //playerController.disableMovement();
                 playerController.armTarget.position = Vector3.Lerp(playerController.armTarget.position, armRestPos.position, 0.05f);
                 // Pull player towards charging poles
                 player.transform.position = Vector3.Lerp(player.transform.position, chargingPoles.transform.position, 0.05f);
@@ -142,7 +142,7 @@ public class ChargingPod : MonoBehaviour
         openArms();
 
         playerLocked = false;
-        playerController.enableMovement();
+        //playerController.enableMovement();
 
         while(playerExiting)
         {
