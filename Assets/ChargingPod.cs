@@ -6,8 +6,9 @@ using static Unity.VisualScripting.Member;
 public class ChargingPod : MonoBehaviour
 {
     public DamageBehavior damageBehavior;
-   
-    public float distanceballs = 10;
+    public bool startopen = true;
+    public bool isIntro = false;
+    public float resetdistance = 10;
     public GameObject podIdle;
     public GameObject podCharging;
     public GameObject player;
@@ -67,8 +68,11 @@ public class ChargingPod : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        openArms();
-
+        if (startopen == true)
+        {
+            openArms();
+        }
+        
         smoke.Stop();
 
         podIdle.SetActive(true);
@@ -98,6 +102,7 @@ public class ChargingPod : MonoBehaviour
                 }
             }
         }
+        
        
 
         // If the player is locked, start charging
@@ -120,7 +125,7 @@ public class ChargingPod : MonoBehaviour
 
         float distance = Vector2.Distance(gameObject.transform.position, player.transform.position);
         
-        if (distance >= distanceballs && playerExiting == true)
+        if (distance >= resetdistance && playerExiting == true)
         {
             playerExiting = false;
         }
