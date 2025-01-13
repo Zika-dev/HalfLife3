@@ -8,7 +8,6 @@ public class Repelleffect : MonoBehaviour
     private GameObject repellEffect;
     public GameObject player;
     private playerController _playerController;
-    private Rigidbody2D rigidBody;
     private Vector3 thisPos;
     private Rigidbody2D lockedRigidBodyCopy;
     public int steps = 10;
@@ -19,12 +18,11 @@ public class Repelleffect : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        rigidBody = GetComponent<Rigidbody2D>();
         repellEffect = gameObject;
 
         player = GameObject.Find("robotBody");
         _playerController = player.GetComponent<playerController>();
-        originalDifference = rigidBody.transform.position - _playerController.lockedRigidbody2D.transform.position;
+        originalDifference = gameObject.transform.position - _playerController.lockedRigidbody2D.transform.position;
 
         stepsDone = 0;
     }
@@ -57,14 +55,14 @@ public class Repelleffect : MonoBehaviour
 
         lockedRigidBodyCopy = _playerController.lockedRigidbody2D;
 
-        Vector2 vectorToTarget = rigidBody.transform.position - lockedRigidBodyCopy.transform.position;
+        Vector2 vectorToTarget = gameObject.transform.position - lockedRigidBodyCopy.transform.position;
 
         Vector2 randomVector = rotateVector(originalDifference / steps, Random.Range(-randomAngle, randomAngle));
 
         if (stepsDone == steps)
         {
             repellEffect.transform.position = lockedRigidBodyCopy.transform.position;
-            Invoke("customDestroy", 0.1f);
+            Invoke("customDestroy", 0.2f);
             return;
         }
         else
