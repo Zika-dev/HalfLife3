@@ -18,6 +18,7 @@ public class playerController : MonoBehaviour
     public Camera camera;
 
     public float thrust = 1.0f;
+    bool movementEnabled = true;
 
     ParticleSystem targetParticles;
 
@@ -202,6 +203,19 @@ public class playerController : MonoBehaviour
 
     void updateMovement()
     {
+        // Lock rotation
+        rb2D.rotation = 0;
+        transform.eulerAngles = new Vector3(0, 0, 0);
+
+        if (!movementEnabled) {
+            thruster1.Stop();
+            thruster2.Stop();
+            thruster3.Stop();
+            thruster4.Stop();
+
+            return;
+        };
+
         if (Input.GetKey(KeyCode.W))
         {
             rb2D.AddForce(transform.up * thrust);
@@ -254,14 +268,12 @@ public class playerController : MonoBehaviour
             thruster1.Stop();
             thrusterLight1.SetActive(false);
         }
-
-        // Lock rotation
-        rb2D.rotation = 0;
-        transform.eulerAngles = new Vector3(0, 0, 0);
     }
 
     void Update()
     {
+        if (!movementEnabled) return;
+
         updateArm();
 
         fieldOfView.SetOrigin(transform.position);
