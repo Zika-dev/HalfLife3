@@ -18,7 +18,7 @@ public class playerController : MonoBehaviour
     public Camera camera;
 
     public float thrust = 1.0f;
-    bool movementEnabled = true;
+    public bool movementEnabled = true;
 
     ParticleSystem targetParticles;
 
@@ -72,7 +72,7 @@ public class playerController : MonoBehaviour
 
         if (collision.collider != null/* && collision.collider.gameObject.layer != 9 && collision.collider.gameObject.layer != 10*/)
         {
-            Debug.Log(collision.collider.gameObject.layer);
+            //Debug.Log(collision.collider.gameObject.layer);
             // Smoothly move the solver along the collision surface
             armTarget.position = Vector3.Lerp(armTarget.position, collision.point, 0.05f);
         }

@@ -9,7 +9,7 @@ public class DamageBehavior : MonoBehaviour
     public GameObject HealthPoint1;
     public GameObject HealthPoint2;
     public GameObject HealthPoint3;
-    private int health = 3;
+    public float health = 3;
     private SpriteRenderer spriteRenderer;
     public int IFrames = 5;
     private int startvalue = 0;
@@ -50,7 +50,7 @@ public class DamageBehavior : MonoBehaviour
         
     }
 
-
+    
     IEnumerator TickTimer(float duration)
     {
         
@@ -63,7 +63,6 @@ public class DamageBehavior : MonoBehaviour
         }
         if (duration <= startvalue)
         {
-            Debug.Log("im bad");
             invincible = false;
             yield return null;
 
