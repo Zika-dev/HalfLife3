@@ -33,9 +33,12 @@ public class playerController : MonoBehaviour
     public float attractStrength = 1f;
     private bool lockedItem = false;
     GameObject lockedObject;
+    public Rigidbody2D lockedRigidbody2D;
 
     private bool canRelease = false;
     private bool canAttract = true;
+
+    private GameObject instantiatedRepellEffect;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -130,16 +133,12 @@ public class playerController : MonoBehaviour
                 canAttract = false;  // Require mouse release before re-attracting
             }
         }
-        if (Input.GetMouseButtonUp(1))
-        {
-            
-        }
 
         // Left mouse button to shoot the object away from the arm tip
         if (Input.GetMouseButton(0))
         {
             float distance = 0.0f;
-            Rigidbody2D lockedRigidbody2D = null;
+            lockedRigidbody2D = null;
             if (lockedItem && canRelease)
                 lockedRigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
             else // Shoot raycast from arm tip
@@ -156,8 +155,8 @@ public class playerController : MonoBehaviour
             }
             if (lockedRigidbody2D != null && distance < range)
             {
-                Instantiate(repellEffect, armTip.position, armTip.rotation);
-                Debug.Log(distance);
+                if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
+                //Debug.Log(distance);
                 lockedRigidbody2D.simulated = true;
                 lockedRigidbody2D.linearVelocity = Vector2.zero;
                 lockedRigidbody2D.AddForce(direction * 25.0f, ForceMode2D.Impulse);
@@ -165,6 +164,10 @@ public class playerController : MonoBehaviour
                 lockedItem = false;
                 canAttract = false;  // Prevent immediate re-attraction
             }
+        }
+        else
+        {
+            instantiatedRepellEffect = null;
         }
     }
 
@@ -233,6 +236,7 @@ public class playerController : MonoBehaviour
         updateArm();
 
         fieldOfView.SetOrigin(transform.position);
+
     }
 
     private void FixedUpdate()
