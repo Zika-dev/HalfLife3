@@ -1,5 +1,6 @@
 using UnityEditor.Tilemaps;
 using UnityEngine;
+using UnityEngine.Experimental.AI;
 using UnityEngine.UIElements;
 
 public class Repelleffect : MonoBehaviour
@@ -10,8 +11,10 @@ public class Repelleffect : MonoBehaviour
     private Rigidbody2D rigidBody;
     private Vector3 thisPos;
     private Rigidbody2D lockedRigidBodyCopy;
-    public float randomness;
-
+    public int steps = 10;
+    private Vector2 originalDifference;
+    public float randomAngle = 20.0f;
+    private static int stepsDone = 0;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -21,7 +24,27 @@ public class Repelleffect : MonoBehaviour
 
         player = GameObject.Find("robotBody");
         _playerController = player.GetComponent<playerController>();
+        originalDifference = rigidBody.transform.position - _playerController.lockedRigidbody2D.transform.position;
 
+        stepsDone = 0;
+    }
+
+    public static Vector2 rotateVector(Vector2 vector, float degrees)
+    {
+        float radians = degrees * Mathf.Deg2Rad;
+
+        float cos = Mathf.Cos(radians);
+        float sin = Mathf.Sin(radians);
+
+        float xNew = cos * vector.x - sin * vector.y;
+        float yNew = sin * vector.x + cos * vector.y;
+
+        return new Vector2(xNew, yNew);
+    }
+
+    void customDestroy()
+    {
+        Destroy(gameObject);
     }
 
     // Update is called once per frame
@@ -36,28 +59,18 @@ public class Repelleffect : MonoBehaviour
 
         Vector2 vectorToTarget = rigidBody.transform.position - lockedRigidBodyCopy.transform.position;
 
-        if (vectorToTarget.magnitude < 0.4f)
+        Vector2 randomVector = rotateVector(originalDifference / steps, Random.Range(-randomAngle, randomAngle));
+
+        if (stepsDone == steps)
         {
-           
-            lockedRigidBodyCopy = null;
-            Destroy(gameObject);
+            repellEffect.transform.position = lockedRigidBodyCopy.transform.position;
+            Invoke("customDestroy", 0.1f);
             return;
         }
-
-        Vector2 randomVector = Vector2.zero;
-
-        float cos = 0.0f;
-
-        while(cos < 0.8f)
+        else
         {
-            Debug.Log("cos: " + cos);
-            randomVector = new (Random.Range(-randomness, randomness), Random.Range(-randomness, randomness));
-            cos = Vector2.Dot(vectorToTarget, randomVector) / (vectorToTarget.magnitude * randomVector.magnitude);
+            ++stepsDone;
+            repellEffect.transform.position = repellEffect.transform.position - new Vector3(randomVector.x, randomVector.y, 0);
         }
-
-        repellEffect.transform.position = repellEffect.transform.position - new Vector3(randomVector.x, randomVector.y, 0);
-        //Debug.Log(thisPos);
-        
-        Debug.DrawRay(thisPos, (rigidBody.linearVelocity + new Vector2(0, Random.Range(-1,1))));
     }
 }

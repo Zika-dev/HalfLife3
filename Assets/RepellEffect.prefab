@@ -190,4 +190,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 0}
-  randomness: 0.2
+  steps: 5
+  randomAngle: 45
