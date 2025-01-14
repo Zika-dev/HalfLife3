@@ -1,4 +1,5 @@
 using System;
+using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
@@ -16,6 +17,8 @@ public class playerController : MonoBehaviour
     public Transform rotationPoint;
     public GameObject elbowRaycast;
     public Camera camera;
+    public GameObject cameraTarget;
+    public int maxCameraDistance;
 
     public float thrust = 1.0f;
     public bool movementEnabled = true;
@@ -51,6 +54,8 @@ public class playerController : MonoBehaviour
     void Start()
     {
         rb2D = GetComponent<Rigidbody2D>();
+
+        cameraTarget.transform.position = gameObject.transform.position;
 
         // Stop all particle systems
         thruster1.Stop();
@@ -270,17 +275,38 @@ public class playerController : MonoBehaviour
         }
     }
 
+    void updateCamera()
+    {
+        // Använd maxad funktion för maxat resultat
+        Vector3 cameraGoal = ClampCameraGoal(mousePos, transform.position, maxCameraDistance);
+        cameraTarget.transform.position = Vector3.Lerp(gameObject.transform.position, cameraGoal, 0.75f);
+    }
+
+    Vector3 ClampCameraGoal(Vector3 mousePos, Vector3 playerPos, float maxDistance)
+    {
+        // Fixa mouse position, sedan klampar man den så att den inte kan fly
+        Vector3 cameraGoal = mousePos - playerPos;
+        return new Vector3(
+            Mathf.Clamp(cameraGoal.x, -maxDistance, maxDistance),
+            Mathf.Clamp(cameraGoal.y, -maxDistance, maxDistance),
+            0) + playerPos;
+    }
+
     void Update()
     {
         if (!movementEnabled) return;
 
         updateArm();
 
+
+
         fieldOfView.SetOrigin(transform.position);
     }
 
     private void FixedUpdate()
     {
+        updateCamera();
+
         updateMovement();
     }
 }
