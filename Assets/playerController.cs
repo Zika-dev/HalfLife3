@@ -18,7 +18,10 @@ public class playerController : MonoBehaviour
     public GameObject elbowRaycast;
     public Camera camera;
     public GameObject cameraTarget;
-    public int maxCameraDistance;
+    public float maxCameraDistanceX;
+    public float maxCameraDistanceY;
+    public float minCameraDistanceX;
+    public float minCameraDistanceY;
     private bool cameraLock = SettingsManager.Instance.cameraLock;
     public CinemachineCamera CinemachineCamera;
 
@@ -55,6 +58,16 @@ public class playerController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        if (SettingsManager.Instance == null)
+        {
+            Debug.Log("SettingsManager.Instance is null");
+            cameraLock = false;
+        }
+        else
+        {
+            cameraLock = SettingsManager.Instance.cameraLock;
+        }
+
         rb2D = GetComponent<Rigidbody2D>();
 
         cameraTarget.transform.position = gameObject.transform.position;
@@ -279,20 +292,41 @@ public class playerController : MonoBehaviour
 
     void updateCamera()
     {
-        // Använd maxad funktion för maxat resultat
-        Vector3 cameraGoal = ClampCameraGoal(mousePos, transform.position, maxCameraDistance);
-        cameraTarget.transform.position = Vector3.Lerp(gameObject.transform.position, cameraGoal, 0.75f);
+        if (!cameraLock)
+        {
+            Vector3 cameraGoal = ClampCameraGoal(mousePos, transform.position);
+            Vector3 targetPosition = Vector3.Lerp(gameObject.transform.position, cameraGoal, 0.75f);
+
+            Vector3 offset = targetPosition - gameObject.transform.position;
+            if (Mathf.Abs(offset.x) > minCameraDistanceX || Mathf.Abs(offset.y) > minCameraDistanceY)
+            {
+                cameraTarget.transform.position = targetPosition;
+                CinemachineCamera.Follow = cameraTarget.transform;
+                print("Camera locked and following target");
+            }
+            else
+            {
+                CinemachineCamera.Follow = gameObject.transform;
+                print("Camera locked but too close to follow target");
+            }
+        }
+        else
+        {
+            CinemachineCamera.Follow = gameObject.transform;
+            print("Camera unlocked");
+        }
     }
 
-    Vector3 ClampCameraGoal(Vector3 mousePos, Vector3 playerPos, float maxDistance)
+    Vector3 ClampCameraGoal(Vector3 mousePos, Vector3 playerPos)
     {
-        // Fixa mouse position, sedan klampar man den så att den inte kan fly
         Vector3 cameraGoal = mousePos - playerPos;
         return new Vector3(
-            Mathf.Clamp(cameraGoal.x, -maxDistance, maxDistance),
-            Mathf.Clamp(cameraGoal.y, -maxDistance, maxDistance),
+            Mathf.Clamp(cameraGoal.x, -maxCameraDistanceX, maxCameraDistanceX),
+            Mathf.Clamp(cameraGoal.y, -maxCameraDistanceY, maxCameraDistanceY),
             0) + playerPos;
     }
+
+
 
     void Update()
     {
@@ -307,19 +341,7 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (!cameraLock)
-        {
-            CinemachineCamera.Follow = cameraTarget.transform;
-            updateCamera();
-            print("Camera locked");
-        }
-        else
-        {
-            CinemachineCamera.Follow = gameObject.transform;
-            print("Camera unlocked");
-        }
-
-
+        updateCamera();
 
         updateMovement();
     }

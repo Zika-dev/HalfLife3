@@ -464,7 +464,7 @@ MonoBehaviour:
       - m_Target: {fileID: 1939672269}
         m_TargetAssemblyTypeName: Menu, Assembly-CSharp
         m_MethodName: setCameraLock
-        m_Mode: 6
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -1995,8 +1995,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mainCanvas: {fileID: 800525007}
   settingsCanvas: {fileID: 661440948}
-  cameraLockToggle: {fileID: 0}
-  settingsManager: {fileID: 265484266}
+  cameraLockToggle: {fileID: 368960891}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
