@@ -7,7 +7,6 @@ public class ChargingPod : MonoBehaviour
 {
     public DamageBehavior damageBehavior;
     public bool startopen = true;
-    public bool isIntro = false;
     public float resetdistance = 10;
     public GameObject podIdle;
     public GameObject podCharging;
