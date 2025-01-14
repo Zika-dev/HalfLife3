@@ -175,7 +175,7 @@ public class playerController : MonoBehaviour
                 lockedRigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
             else // Shoot raycast from arm tip
             {
-                RaycastHit2D hit = Physics2D.Raycast(armTip.position, direction, 10.0f);
+                RaycastHit2D hit = Physics2D.Raycast(armTip.position, direction, range);
                 if (hit.collider != null && hit.collider.CompareTag("Interactable"))
                 {
                     GameObject obj = hit.collider.gameObject;

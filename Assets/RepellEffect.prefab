@@ -31,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4.99, y: -0.58, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 5, y: 5, z: 5}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -91,7 +91,7 @@ TrailRenderer:
       m_Curve:
       - serializedVersion: 3
         time: 0
-        value: 0.2
+        value: 0.9999999
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -99,8 +99,8 @@ TrailRenderer:
         inWeight: 0.33333334
         outWeight: 0.07520886
       - serializedVersion: 3
-        time: 1
-        value: 0.225
+        time: 0.9605462
+        value: 1
         inSlope: 0.031249963
         outSlope: 0.031249963
         tangentMode: 0
@@ -330,7 +330,7 @@ ParticleSystem:
     startSpeed:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 5
+      scalar: 25
       minScalar: 5
       maxCurve:
         serializedVersion: 2
@@ -1084,7 +1084,7 @@ ParticleSystem:
     rateOverDistance:
       serializedVersion: 2
       minMaxState: 0
-      scalar: 2
+      scalar: 0.4
       minScalar: 0
       maxCurve:
         serializedVersion: 2

@@ -48,14 +48,13 @@ public class Repelleffect : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        lockedRigidBodyCopy = _playerController.lockedRigidbody2D;
         if (_playerController.lockedRigidbody2D == null && lockedRigidBodyCopy == null)
         {
             return;
         }
 
-        lockedRigidBodyCopy = _playerController.lockedRigidbody2D;
-
-        Vector2 vectorToTarget = gameObject.transform.position - lockedRigidBodyCopy.transform.position;
+        
 
         Vector2 randomVector = rotateVector(originalDifference / steps, Random.Range(-randomAngle, randomAngle));
 
