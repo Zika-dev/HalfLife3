@@ -19,6 +19,8 @@ public class playerController : MonoBehaviour
     public Camera camera;
     public GameObject cameraTarget;
     public int maxCameraDistance;
+    private bool cameraLock = SettingsManager.Instance.cameraLock;
+    public CinemachineCamera CinemachineCamera;
 
     public float thrust = 1.0f;
     public bool movementEnabled = true;
@@ -305,7 +307,19 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        updateCamera();
+        if (!cameraLock)
+        {
+            CinemachineCamera.Follow = cameraTarget.transform;
+            updateCamera();
+            print("Camera locked");
+        }
+        else
+        {
+            CinemachineCamera.Follow = gameObject.transform;
+            print("Camera unlocked");
+        }
+
+
 
         updateMovement();
     }
