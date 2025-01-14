@@ -1,9 +1,9 @@
-using Microsoft.Unity.VisualStudio.Editor;
 using System;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.Rendering.Universal;
+using static UnityEngine.EventSystems.EventTrigger;
+using Random = UnityEngine.Random;
 
 public class irisBehaviour : MonoBehaviour
 {
@@ -12,6 +12,7 @@ public class irisBehaviour : MonoBehaviour
     {
         Wandering,
         PathCorrection,
+        Engaging,
     }
 
     [Header("Movement")]
@@ -33,11 +34,19 @@ public class irisBehaviour : MonoBehaviour
     private EnemyState currentState = EnemyState.Wandering;
 
     private Vector2 lastPointOnLine = Vector2.zero;
+    private bool goingBack = false;
 
     [Range(0.0f, 180.0f)]
     public float angleThreshold = 5.0f;
 
     private int currentCheckpoint = 0;
+
+    [Header("Player Detection")]
+    public Transform playerTransform;
+    public float distanceToEngage = 10.0f;
+    public Transform eyeTransform;
+    public Vector2 combatPosition = new Vector2(0, 0);
+    public float radius = 5.0f;
 
     [Header("PID Controller (Turning)")]
     public float maximumTurnSpeed = 10.0f;
@@ -54,7 +63,7 @@ public class irisBehaviour : MonoBehaviour
     public float pathCorrectionThresholdAngle = 20.0f;
     public float lookAheadFactor = 2f;
     public float lookAheadOffset = 0.2f;
-
+    public float maxDistanceToCorrect = 2.0f;
 
     private Vector2 startPos;
 
@@ -109,9 +118,11 @@ public class irisBehaviour : MonoBehaviour
 
         Debug.DrawLine(transform.position, target, Color.red);
         Debug.DrawLine(startPos, target, Color.green);
+
+        float maxDistance = pathCorrection ? maxDistanceToTarget : maxDistanceToCorrect;
         
         // Check if target is reached
-        if (Vector2.Distance(transform.position, target) < maxDistanceToTarget && irisRB.linearVelocity.magnitude < maxSpeedForNextTarget)
+        if (Vector2.Distance(transform.position, target) < maxDistance && irisRB.linearVelocity.magnitude < maxSpeedForNextTarget)
         {
             if (pathCorrection)
             {
@@ -149,7 +160,6 @@ public class irisBehaviour : MonoBehaviour
                 {
                     irisRB.AddForce(transform.up * targetSpeed);
                 }
-                
             }
         }
 
@@ -181,21 +191,21 @@ public class irisBehaviour : MonoBehaviour
             // Calculate the angle in radians and convert to degrees
             float angleInDegrees = Mathf.Acos(dotProduct) * Mathf.Rad2Deg;
 
+            Vector2 u = target - startPos;
+            float scalar = ((transform.position.x - startPos.x) * u.x + (transform.position.y - startPos.y) * u.y) / (Mathf.Pow(u.x, 2) + Mathf.Pow(u.y, 2)) * 2 + 0.2f;
 
+            if (scalar > 1)
+                scalar = 1;
+            else if (scalar < 0)
+                scalar = 0;
+
+            Vector2 pointOnLine = new Vector2(startPos.x + scalar * u.x, startPos.y + scalar * u.y);
+
+            Debug.DrawLine(transform.position, pointOnLine, Color.blue);
 
             if (angleInDegrees > pathCorrectionThresholdAngle)
             {
-                Vector2 u = target - startPos;
-                float scalar = ((transform.position.x - startPos.x) * u.x + (transform.position.y - startPos.y) * u.y) / (Mathf.Pow(u.x, 2) + Mathf.Pow(u.y, 2)) * 2 + 0.2f;
-
-                if (scalar > 1)
-                    scalar = 1;
-                else if (scalar < 0)
-                    scalar = 0;
-
-                Vector2 pointOnLine = new Vector2(startPos.x + scalar * u.x, startPos.y + scalar * u.y);
-
-                Debug.DrawLine(transform.position, pointOnLine, Color.blue);
+                
 
                 currentState = EnemyState.PathCorrection;
                 lastPointOnLine = pointOnLine;
@@ -208,14 +218,32 @@ public class irisBehaviour : MonoBehaviour
 
     void followPath()
     {
+
+
         if (checkpoints.Count > 0)
         {
             if (goToPosition(checkpoints[currentCheckpoint].position, true))
             {
-                ++currentCheckpoint;
-                if (currentCheckpoint >= checkpoints.Count)
+                if (goingBack)
                 {
-                    currentCheckpoint = 0;
+                    --currentCheckpoint;
+
+                    if (currentCheckpoint < 0)
+                    {
+                        goingBack = false;
+
+                        currentCheckpoint = 1;
+                    }
+                }
+                else
+                {
+                    ++currentCheckpoint;
+
+                    if (currentCheckpoint >= checkpoints.Count)
+                    {
+                        goingBack = true;
+                        currentCheckpoint = checkpoints.Count - 2;
+                    }
                 }
             }
         }
@@ -229,10 +257,43 @@ public class irisBehaviour : MonoBehaviour
         }
     }
 
+    void engaging()
+    {
+        if (true)
+        {   
+            float r = radius * Mathf.Sqrt(Random.Range(0, 1));
+            float theta = Random.Range(0, 1) * 2 * Mathf.PI;
+            float x = playerTransform.position.x + r * MathF.Cos(theta);
+            float y = playerTransform.position.y + r * MathF.Sin(theta);
+
+            combatPosition = new Vector2(x, y);
+
+            Debug.Log("Combat position: " + combatPosition);
+        }
+
+        Debug.DrawLine(transform.position, combatPosition, Color.yellow);
+
+        //goToPosition(combatPosition, false);
+    }
+
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKey(KeyCode.R)){
+        Vector2 direction = playerTransform.position - eyeTransform.position;
+        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction.normalized, distanceToEngage);
+        Debug.DrawRay(eyeTransform.position, direction, Color.cyan);
+
+        if (hit.collider != null && currentState != EnemyState.Engaging)
+        {
+            Debug.Log(hit.collider.tag);
+            if (hit.collider.CompareTag("Player"))
+            {
+                currentState = EnemyState.Engaging;
+                Debug.Log("Engaging player");
+            }
+        }
+
+        if (Input.GetKey(KeyCode.R)){
             gameObject.transform.position = checkpoints[3].transform.position;
             currentCheckpoint = 0;
             irisRB.linearVelocity = Vector2.zero;
@@ -246,6 +307,10 @@ public class irisBehaviour : MonoBehaviour
 
             case EnemyState.PathCorrection:
                 pathCorrection();
+                break;
+
+            case EnemyState.Engaging:
+                engaging();
                 break;
         }
     }
