@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Unity.Mathematics;
+using UnityEditor.Build;
 using UnityEngine;
+using UnityEngine.AI;
 using static UnityEngine.EventSystems.EventTrigger;
 using Random = UnityEngine.Random;
 
@@ -29,6 +31,7 @@ public class irisBehaviour : MonoBehaviour
 
     [Header("Targeting")]
     public List<Transform> checkpoints = new List<Transform>();
+    public List<Vector2> navPath = new List<Vector2>();
     public float maxSpeedForNextTarget = 0.5f;
     public float maxDistanceToTarget = 0.5f;
     private EnemyState currentState = EnemyState.Wandering;
@@ -40,6 +43,7 @@ public class irisBehaviour : MonoBehaviour
     public float angleThreshold = 5.0f;
 
     private int currentCheckpoint = 0;
+    private int currentPathIndex = 0;
 
     [Header("Player Detection")]
     public Transform playerTransform;
@@ -47,6 +51,7 @@ public class irisBehaviour : MonoBehaviour
     public Transform eyeTransform;
     public Vector2 combatPosition = new Vector2(0, 0);
     public float radius = 5.0f;
+    bool inPosition = false;
 
     [Header("PID Controller (Turning)")]
     public float maximumTurnSpeed = 10.0f;
@@ -109,6 +114,20 @@ public class irisBehaviour : MonoBehaviour
         return torque;
     }
 
+    void lookAtObject(Vector2 targetPos)
+    {
+        Vector2 direction = ((Vector3)targetPos - transform.position).normalized;
+
+        // PID controller for turning
+        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90;
+        float torque = PIDController(targetAngle);
+
+        // Clamp the torque to avoid excessive force
+        torque = Mathf.Clamp(torque, -maximumTurnSpeed, maximumTurnSpeed);
+
+        irisRB.AddTorque(torque);
+    }
+
     bool goToPosition(Vector2 target, bool pathCorrection)
     {
         Vector2 direction = ((Vector3)target - transform.position).normalized;
@@ -164,12 +183,7 @@ public class irisBehaviour : MonoBehaviour
         }
 
         // PID controller for turning
-        float targetAngle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg - 90;
-        float torque = PIDController(targetAngle);
-
-        // Clamp the torque to avoid excessive force
-        torque = Mathf.Clamp(torque, -maximumTurnSpeed, maximumTurnSpeed);
-        irisRB.AddTorque(torque);
+        lookAtObject(target);
 
         // Check if path correction is needed
         if (pathCorrection && Vector2.Distance(transform.position, target) >= 1.0)
@@ -216,35 +230,69 @@ public class irisBehaviour : MonoBehaviour
         return false;
     }
 
-    void followPath()
+    bool followPath(List<Vector2> path)
     {
-
-
-        if (checkpoints.Count > 0)
+        if (path.Count > 0)
         {
-            if (goToPosition(checkpoints[currentCheckpoint].position, true))
+            if (goToPosition(path[currentPathIndex], true))
             {
-                if (goingBack)
+                ++currentPathIndex;
+
+                if (currentPathIndex >= path.Count) // If we reached the end of the path
                 {
-                    --currentCheckpoint;
-
-                    if (currentCheckpoint < 0)
-                    {
-                        goingBack = false;
-
-                        currentCheckpoint = 1;
-                    }
+                    currentPathIndex = 0;
+                    return true;
                 }
-                else
-                {
-                    ++currentCheckpoint;
+            }
+        }
 
-                    if (currentCheckpoint >= checkpoints.Count)
-                    {
-                        goingBack = true;
-                        currentCheckpoint = checkpoints.Count - 2;
-                    }
-                }
+        return false;
+    }
+
+    List<Vector2> calculatePath(Transform targetPos)
+    {
+        if (targetPos == null)
+            return new List<Vector2>();
+
+        List<Vector2> path = new List<Vector2>();
+
+        NavMesh.SamplePosition(transform.position, out NavMeshHit hitA, 10f, NavMesh.AllAreas);
+        NavMesh.SamplePosition(targetPos.position, out NavMeshHit hitB, 10f, NavMesh.AllAreas);
+
+        NavMeshPath navMeshPath = new NavMeshPath();
+        if (NavMesh.CalculatePath(hitA.position, hitB.position, NavMesh.AllAreas, navMeshPath))
+        {
+            float distance = 0f;
+            for (int i = 0; i < navMeshPath.corners.Length - 1; i++)
+            {
+                distance += (navMeshPath.corners[i] - navMeshPath.corners[i + 1]).magnitude;
+                path.Add(navMeshPath.corners[i]);
+                Debug.DrawLine(navMeshPath.corners[i], navMeshPath.corners[i + 1], Color.green, 10f, true);
+            }
+
+            path.Add(navMeshPath.corners[navMeshPath.corners.Length]);
+
+            Debug.Log($"Total distance {distance:F2}");
+        }
+        else
+        {
+            Debug.LogError("Mission Fail");
+        }
+
+        return path;
+    }
+
+    void wandering() // Go to each checkpoint
+    {
+        navPath = calculatePath(checkpoints[0]);
+
+        if (followPath(navPath))
+        {
+            ++currentCheckpoint;
+
+            if (currentCheckpoint >= checkpoints.Count)
+            {
+                currentCheckpoint = 0;
             }
         }
     }
@@ -259,10 +307,10 @@ public class irisBehaviour : MonoBehaviour
 
     void engaging()
     {
-        if (true)
-        {   
-            float r = radius * Mathf.Sqrt(Random.Range(0, 1));
-            float theta = Random.Range(0, 1) * 2 * Mathf.PI;
+        if (combatPosition == Vector2.zero)
+        {
+            float r = radius * Mathf.Sqrt(Random.Range(0.0f, 1.0f));
+            float theta = Random.Range(0.0f, 1.0f) * 2 * Mathf.PI;
             float x = playerTransform.position.x + r * MathF.Cos(theta);
             float y = playerTransform.position.y + r * MathF.Sin(theta);
 
@@ -273,19 +321,30 @@ public class irisBehaviour : MonoBehaviour
 
         Debug.DrawLine(transform.position, combatPosition, Color.yellow);
 
-        //goToPosition(combatPosition, false);
+        Debug.Log(inPosition);
+
+        if (!inPosition)
+        {
+            if (goToPosition(combatPosition, false))
+                inPosition = true;
+
+            return;
+        }
+
+        lookAtObject(playerTransform.position);
     }
 
     // Update is called once per frame
     void Update()
     {
         Vector2 direction = playerTransform.position - eyeTransform.position;
-        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction.normalized, distanceToEngage);
+        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
         Debug.DrawRay(eyeTransform.position, direction, Color.cyan);
+
+        Debug.Log(checkpoints);
 
         if (hit.collider != null && currentState != EnemyState.Engaging)
         {
-            Debug.Log(hit.collider.tag);
             if (hit.collider.CompareTag("Player"))
             {
                 currentState = EnemyState.Engaging;
@@ -302,7 +361,7 @@ public class irisBehaviour : MonoBehaviour
         switch (currentState)
         {
             case EnemyState.Wandering:
-                followPath();
+                //wandering();
                 break;
 
             case EnemyState.PathCorrection:
