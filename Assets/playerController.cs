@@ -62,7 +62,7 @@ public class playerController : MonoBehaviour
         if (SettingsManager.Instance == null)
         {
             Debug.Log("SettingsManager.Instance is null");
-            cameraLock = false;
+            cameraLock = true;
         }
         else
         {
