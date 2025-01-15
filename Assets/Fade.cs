@@ -14,7 +14,6 @@ public class NewMonoBehaviourScript : MonoBehaviour
         StartCoroutine(FadeOut());
     }
 
-    // Update is called once per frame
     IEnumerator FadeOut()
     {
         float time = 0.0f;
