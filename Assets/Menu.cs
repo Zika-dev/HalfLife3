@@ -8,11 +8,7 @@ public class Menu : MonoBehaviour
     public Canvas settingsCanvas;
     public Toggle cameraLockToggle;
 
-    public void playgame()
-    {
-        int nextLevelIndex = SceneManager.GetActiveScene().buildIndex + 1;
-        SceneManager.LoadScene(nextLevelIndex);
-    }
+   
 
     public void replaygame()
     {
