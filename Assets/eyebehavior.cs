@@ -14,7 +14,7 @@ public class eyebehavior : MonoBehaviour
 
     void Start()
     {
-        test = GetComponent<SpriteRenderer>();
+       
     }
 
     void Update()
@@ -51,6 +51,11 @@ public class eyebehavior : MonoBehaviour
     //example:  StartCoroutine(changeEyes(eyesPain, 200));
     public IEnumerator changeEyes(Sprite eyes, int duration)
     {
+        Debug.Log("started IEnumerator");
+
+        test = GetComponent<SpriteRenderer>();
+        if (eyes == null) { Debug.Log("eyes are null"); yield return null; }
+
         test.sprite = eyes;
         float timer = 0;
         while (timer <= duration)
@@ -64,8 +69,5 @@ public class eyebehavior : MonoBehaviour
             Debug.Log("changed back");
             test.sprite = eyesBaseSprite;
         }
-
-
     }
-
 }

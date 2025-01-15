@@ -6,6 +6,9 @@ TagManager:
   tags:
   - Interactable
   - DamageObject
+  - magick montage * -geometry 128x128 -tile 16x16 -background transparent -filter
+    Catrom spritesheet.png
+  - PlayerTag
   layers:
   - Default
   - TransparentFX

@@ -15,42 +15,47 @@ public class DamageBehavior : MonoBehaviour
     private int startvalue = 0;
     private bool invincible = false;
 
+    public float MaxHealth = 100;
+    private float CurrentHealth;
+    public DamageObjectSettings damageObjectSettings;
+    private Color customcolor = new Color(0.3f, 0.87f, 1);
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        CurrentHealth = MaxHealth;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (health <= 0)
+        if (Input.GetKey(KeyCode.Space))
         {
-            // this is temporary, but just destroying gameObject works for now
-            Destroy(gameObject);
+            CurrentHealth = CurrentHealth - 1;
+
+            float healthRatio = Mathf.Clamp01(CurrentHealth / MaxHealth);
+
+            float r = Mathf.Lerp(1.0f, customcolor.r, healthRatio);
+            float g = Mathf.Lerp(0.0f, customcolor.g, healthRatio);
+            float b = Mathf.Lerp(0.0f, customcolor.b, healthRatio);
+
+            ChangeObjectColor(HealthPoint1, new Color(r, g, b));
+            Debug.Log(CurrentHealth);
         }
-        else if (health == 1)
+
+
+
+        
+        if (CurrentHealth <= 0)
         {
-            ChangeObjectColor(HealthPoint1, Color.red);
-            ChangeObjectColor(HealthPoint2, Color.red);
-            ChangeObjectColor(HealthPoint3, Color.cyan);
-        }
-        else if (health == 2)
-        {
-            ChangeObjectColor(HealthPoint1, Color.red);
-            ChangeObjectColor(HealthPoint2, Color.cyan);
-            ChangeObjectColor(HealthPoint3, Color.cyan);
-        }
-        else if (health >= 3)
-        {
-            ChangeObjectColor(HealthPoint1, Color.cyan);
-            ChangeObjectColor(HealthPoint2, Color.cyan);
-            ChangeObjectColor(HealthPoint3, Color.cyan);
+            Debug.Log("death");
+            
         }
         
+
     }
 
-    
+
     IEnumerator TickTimer(float duration)
     {
         
@@ -70,19 +75,33 @@ public class DamageBehavior : MonoBehaviour
         
     }
 
-    private void OnTriggerEnter2D(Collider2D collision)
+    public void DealDamage(float damage)
     {
-        
-        if (collision.CompareTag("DamageObject"))
+        if (!invincible)
         {
-            if (!invincible)
-            {
-                startvalue = 0;
-                StartCoroutine(TickTimer(IFrames));
-                health--;
-            }
+            Debug.Log(damage);
+            startvalue = 0;
+            StartCoroutine(TickTimer(IFrames));
+
+
+            CurrentHealth = CurrentHealth - damage;
+
+
+            float healthRatio = Mathf.Clamp01(CurrentHealth / MaxHealth);
+
+            float r = Mathf.Lerp(1.0f, customcolor.r, healthRatio);
+            float g = Mathf.Lerp(0.0f, customcolor.g, healthRatio);
+            float b = Mathf.Lerp(0.0f, customcolor.b, healthRatio);
+
+            ChangeObjectColor(HealthPoint1, new Color(r, g, b));
+
         }
     }
+    
+    
+    
+    
+   
     void ChangeObjectColor(GameObject obj, Color newColor)
     {
         
