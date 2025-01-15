@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
 using UnityEditor.Build;
@@ -34,7 +35,7 @@ public class irisBehaviour : MonoBehaviour
     public List<Vector2> navPath = new List<Vector2>();
     public float maxSpeedForNextTarget = 0.5f;
     public float maxDistanceToTarget = 0.5f;
-    private EnemyState currentState = EnemyState.Wandering;
+    public EnemyState currentState = EnemyState.Wandering;
 
     private Vector2 lastPointOnLine = Vector2.zero;
     private bool goingBack = false;
@@ -78,6 +79,8 @@ public class irisBehaviour : MonoBehaviour
         irisRB = GetComponent<Rigidbody2D>();
 
         startPos = transform.position;
+
+        //navPath = calculatePath(checkpoints[currentCheckpoint]);
     }
 
     public float calculateVelocity(float progress, float vMax, float vMin, float breakStart = 0.65f, float breakEnd = 0.90f, float breakSpeed = 10f)
@@ -219,8 +222,6 @@ public class irisBehaviour : MonoBehaviour
 
             if (angleInDegrees > pathCorrectionThresholdAngle)
             {
-                
-
                 currentState = EnemyState.PathCorrection;
                 lastPointOnLine = pointOnLine;
                 Debug.Log("Angle too large: " + angleInDegrees);
@@ -234,7 +235,7 @@ public class irisBehaviour : MonoBehaviour
     {
         if (path.Count > 0)
         {
-            if (goToPosition(path[currentPathIndex], true))
+            if (goToPosition(path[currentPathIndex], false))
             {
                 ++currentPathIndex;
 
@@ -267,12 +268,12 @@ public class irisBehaviour : MonoBehaviour
             {
                 distance += (navMeshPath.corners[i] - navMeshPath.corners[i + 1]).magnitude;
                 path.Add(navMeshPath.corners[i]);
-                Debug.DrawLine(navMeshPath.corners[i], navMeshPath.corners[i + 1], Color.green, 10f, true);
+                Debug.DrawLine(navMeshPath.corners[i], navMeshPath.corners[i + 1], Color.cyan, 1f, true);
             }
 
-            path.Add(navMeshPath.corners[navMeshPath.corners.Length]);
+            path.Add(navMeshPath.corners[navMeshPath.corners.Length - 1]);
 
-            Debug.Log($"Total distance {distance:F2}");
+            //Debug.Log($"Total distance {distance:F2}");
         }
         else
         {
@@ -284,17 +285,25 @@ public class irisBehaviour : MonoBehaviour
 
     void wandering() // Go to each checkpoint
     {
-        navPath = calculatePath(checkpoints[0]);
 
-        if (followPath(navPath))
+        if (navPath == null || navPath.Count == 0)
         {
-            ++currentCheckpoint;
-
-            if (currentCheckpoint >= checkpoints.Count)
-            {
-                currentCheckpoint = 0;
-            }
+            StartCoroutine(updatePath());
         }
+
+        followPath(navPath);
+
+        //if (followPath(navPath))
+        //{
+        //    ++currentCheckpoint;
+
+        //    if (currentCheckpoint > checkpoints.Count - 1)
+        //    {
+        //        currentCheckpoint = 0;
+        //    }
+
+        //    navPath = calculatePath(checkpoints[currentCheckpoint]);
+        //}
     }
 
     void pathCorrection()
@@ -337,31 +346,23 @@ public class irisBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        Vector2 direction = playerTransform.position - eyeTransform.position;
-        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
-        Debug.DrawRay(eyeTransform.position, direction, Color.cyan);
+        //Vector2 direction = playerTransform.position - eyeTransform.position;
+        //RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
+        //Debug.DrawRay(eyeTransform.position, direction, Color.cyan);
 
-        Debug.Log(checkpoints);
+        //if (hit.collider != null && currentState != EnemyState.Engaging)
+        //{
+        //    if (hit.collider.CompareTag("Player"))
+        //    {
+        //        currentState = EnemyState.Engaging;
+        //        Debug.Log("Engaging player");
+        //    }
+        //}
 
-        if (hit.collider != null && currentState != EnemyState.Engaging)
-        {
-            if (hit.collider.CompareTag("Player"))
-            {
-                currentState = EnemyState.Engaging;
-                Debug.Log("Engaging player");
-            }
-        }
-
-        if (Input.GetKey(KeyCode.R)){
-            gameObject.transform.position = checkpoints[3].transform.position;
-            currentCheckpoint = 0;
-            irisRB.linearVelocity = Vector2.zero;
-            irisRB.angularVelocity = 0;
-        }
         switch (currentState)
         {
             case EnemyState.Wandering:
-                //wandering();
+                wandering();
                 break;
 
             case EnemyState.PathCorrection:
@@ -371,6 +372,16 @@ public class irisBehaviour : MonoBehaviour
             case EnemyState.Engaging:
                 engaging();
                 break;
+        }
+    }
+
+    private IEnumerator updatePath()
+    {
+        while (true)
+        {
+            navPath = calculatePath(checkpoints[currentCheckpoint]);
+            Debug.Log("Path updated");
+            yield return new WaitForSeconds(1.0f);
         }
     }
 }

@@ -17,14 +17,13 @@ public class PathFinder : MonoBehaviour
         NavMeshPath path = new NavMeshPath();
         if (NavMesh.CalculatePath(hitA.position, hitB.position, NavMesh.AllAreas, path))
         {
-            Debug.DrawLine(hitA.position + Vector3.up, hitB.position + Vector3.up, Color.red, 10f, true); // a red line float in air
             int cnt = path.corners.Length;
 
             float distance = 0f;
             for (int i = 0; i < cnt - 1; i++)
             {
                 distance += (path.corners[i] - path.corners[i + 1]).magnitude;
-                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.green, 10f, true);
+                Debug.DrawLine(path.corners[i], path.corners[i + 1], Color.green, 0.1f, true);
             }
             Debug.Log($"Total distance {distance:F2}");
         }
