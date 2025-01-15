@@ -29,6 +29,9 @@ public class ChargingPod : MonoBehaviour
     bool playerLocked = false;
     bool playerExiting = false;
 
+    float timeWent;
+    bool doorClosed;
+
     private void openArms()
     {
         
@@ -114,10 +117,21 @@ public class ChargingPod : MonoBehaviour
 
     void Update()
     {
+        if (doorClosed && timeWent <= 4.5)
+        {
+            timeWent += Time.deltaTime;
+        }
+        else if (doorClosed && timeWent >= 4.5)
+        {
+            doorFullyOpen();
+        }
+
+
         if (Input.GetKeyDown(KeyCode.Space) && playerLocked)
         {
             podDoor.SetBool("PlayerLocked", false);
           
+            doorClosed = true;
             playerExiting = true;
         }
 
@@ -145,12 +159,11 @@ public class ChargingPod : MonoBehaviour
             podCharging.SetActive(true);
             smoke.Play();
             
-
-            
             damageBehavior.health = 3;
             StartCoroutine(stopSmoke());
-        }
 
+            timeWent = 0f;
+        }
     }
 
     public void doorFullyOpen()
