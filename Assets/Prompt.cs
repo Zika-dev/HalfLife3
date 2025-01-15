@@ -73,7 +73,7 @@ public class Interaction : MonoBehaviour
             else
             {
                 rawImage.texture = null;
-                textLabel.text = "No Texture Available";
+                textLabel.text = "> No Texture Available";
             }
          
 
