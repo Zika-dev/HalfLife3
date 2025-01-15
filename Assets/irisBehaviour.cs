@@ -1,10 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using Unity.Mathematics;
+using Unity.VisualScripting;
 using UnityEditor.Build;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.Rendering.Universal;
+using UnityEngine.UIElements;
 using static UnityEngine.EventSystems.EventTrigger;
 using Random = UnityEngine.Random;
 
@@ -16,6 +20,8 @@ public class irisBehaviour : MonoBehaviour
         Wandering,
         PathCorrection,
         Engaging,
+        Fleeing,
+        Searching,
     }
 
     [Header("Movement")]
@@ -37,8 +43,8 @@ public class irisBehaviour : MonoBehaviour
     public float maxDistanceToTarget = 0.5f;
     public EnemyState currentState = EnemyState.Wandering;
 
+    private Vector2 startPos;
     private Vector2 lastPointOnLine = Vector2.zero;
-    private bool goingBack = false;
 
     [Range(0.0f, 180.0f)]
     public float angleThreshold = 5.0f;
@@ -46,13 +52,18 @@ public class irisBehaviour : MonoBehaviour
     private int currentCheckpoint = 0;
     private int currentPathIndex = 0;
 
-    [Header("Player Detection")]
+    [Header("Combat")]
     public Transform playerTransform;
     public float distanceToEngage = 10.0f;
     public Transform eyeTransform;
-    public Vector2 combatPosition = new Vector2(0, 0);
-    public float radius = 5.0f;
-    bool inPosition = false;
+    public float searchRadius = 5.0f;
+    public int maxAttempts = 10;
+    public float repositionDelay = 10.0f;
+    public float minimumDistanceToPlayer = 2.0f;
+    public float minimumDistanceFromEnemy = 6.0f;
+    public float maximumDistanceFromEnemy = 4.0f;
+
+    private Vector2 combatPosition = new Vector2(0, 0);
 
     [Header("PID Controller (Turning)")]
     public float maximumTurnSpeed = 10.0f;
@@ -62,6 +73,7 @@ public class irisBehaviour : MonoBehaviour
 
     private float previousError = 0f;
     private float integral = 0f;
+    private float previousDerivative = 0f;
 
     [Header("Path correction")]
 
@@ -71,7 +83,14 @@ public class irisBehaviour : MonoBehaviour
     public float lookAheadOffset = 0.2f;
     public float maxDistanceToCorrect = 2.0f;
 
-    private Vector2 startPos;
+    [Header("Arm")]
+    public HingeJoint2D forearmJoint;
+    public float aimSpeed = 100.0f;
+
+    private JointMotor2D motor;
+
+
+    public Transform resetPoint;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -80,7 +99,9 @@ public class irisBehaviour : MonoBehaviour
 
         startPos = transform.position;
 
-        //navPath = calculatePath(checkpoints[currentCheckpoint]);
+        StartCoroutine(updatePath());
+
+        motor = forearmJoint.motor;
     }
 
     public float calculateVelocity(float progress, float vMax, float vMin, float breakStart = 0.65f, float breakEnd = 0.90f, float breakSpeed = 10f)
@@ -108,14 +129,30 @@ public class irisBehaviour : MonoBehaviour
 
         // Calculate PID terms
         integral += error * Time.fixedDeltaTime;  // Integral term
-        float derivative = (error - previousError) / Time.fixedDeltaTime;  // Derivative term
+        integral = Mathf.Clamp(integral, -10f, 10f);  // Limit integral to prevent windup
+
+        float derivative = (error - previousError) / Time.fixedDeltaTime;
+        float smoothingFactor = 0.9f; // Smoothing for derivative term
+        derivative = smoothingFactor * derivative + (1 - smoothingFactor) * previousDerivative;
+        previousDerivative = derivative;
+
         previousError = error;
 
         // Compute the control signal (torque)
         float torque = pGain * error + iGain * integral + dGain * derivative;
 
+        // Clamp the torque output
+        torque = Mathf.Clamp(torque, -maximumTurnSpeed, maximumTurnSpeed);
+
+        // Anti-windup: Adjust integral if output is clamped
+        if ((torque == maximumTurnSpeed && error > 0) || (torque == -maximumTurnSpeed && error < 0))
+        {
+            integral -= error * Time.fixedDeltaTime;  // Undo last integral update
+        }
+
         return torque;
     }
+
 
     void lookAtObject(Vector2 targetPos)
     {
@@ -138,8 +175,8 @@ public class irisBehaviour : MonoBehaviour
 
         //Debug.Log(irisRB.linearVelocity.magnitude);
 
-        Debug.DrawLine(transform.position, target, Color.red);
-        Debug.DrawLine(startPos, target, Color.green);
+        //Debug.DrawLine(transform.position, target, Color.red);
+        //Debug.DrawLine(startPos, target, Color.green);
 
         float maxDistance = pathCorrection ? maxDistanceToTarget : maxDistanceToCorrect;
         
@@ -152,7 +189,7 @@ public class irisBehaviour : MonoBehaviour
                 Debug.Log("Start position updated: " + startPos);
             }
                 
-            Debug.Log("Target reached");
+            //Debug.Log("Target reached");
             return true;
         }
 
@@ -209,7 +246,7 @@ public class irisBehaviour : MonoBehaviour
             float angleInDegrees = Mathf.Acos(dotProduct) * Mathf.Rad2Deg;
 
             Vector2 u = target - startPos;
-            float scalar = ((transform.position.x - startPos.x) * u.x + (transform.position.y - startPos.y) * u.y) / (Mathf.Pow(u.x, 2) + Mathf.Pow(u.y, 2)) * 2 + 0.2f;
+            float scalar = ((transform.position.x - startPos.x) * u.x + (transform.position.y - startPos.y) * u.y) / (Mathf.Pow(u.x, 2) + Mathf.Pow(u.y, 2)) * lookAheadFactor + lookAheadOffset;
 
             if (scalar > 1)
                 scalar = 1;
@@ -231,11 +268,11 @@ public class irisBehaviour : MonoBehaviour
         return false;
     }
 
-    bool followPath(List<Vector2> path)
+    bool followPath(List<Vector2> path, bool pathCorrection)
     {
         if (path.Count > 0)
         {
-            if (goToPosition(path[currentPathIndex], false))
+            if (goToPosition(path[currentPathIndex], pathCorrection))
             {
                 ++currentPathIndex;
 
@@ -250,7 +287,7 @@ public class irisBehaviour : MonoBehaviour
         return false;
     }
 
-    List<Vector2> calculatePath(Transform targetPos)
+    List<Vector2> calculatePath(Vector2 targetPos)
     {
         if (targetPos == null)
             return new List<Vector2>();
@@ -258,17 +295,17 @@ public class irisBehaviour : MonoBehaviour
         List<Vector2> path = new List<Vector2>();
 
         NavMesh.SamplePosition(transform.position, out NavMeshHit hitA, 10f, NavMesh.AllAreas);
-        NavMesh.SamplePosition(targetPos.position, out NavMeshHit hitB, 10f, NavMesh.AllAreas);
+        NavMesh.SamplePosition(targetPos, out NavMeshHit hitB, 10f, NavMesh.AllAreas);
 
         NavMeshPath navMeshPath = new NavMeshPath();
         if (NavMesh.CalculatePath(hitA.position, hitB.position, NavMesh.AllAreas, navMeshPath))
         {
             float distance = 0f;
-            for (int i = 0; i < navMeshPath.corners.Length - 1; i++)
+            for (int i = 1; i < navMeshPath.corners.Length - 1; i++)
             {
                 distance += (navMeshPath.corners[i] - navMeshPath.corners[i + 1]).magnitude;
                 path.Add(navMeshPath.corners[i]);
-                Debug.DrawLine(navMeshPath.corners[i], navMeshPath.corners[i + 1], Color.cyan, 1f, true);
+                Debug.DrawLine(navMeshPath.corners[i], navMeshPath.corners[i + 1], Color.magenta, 1f, true);
             }
 
             path.Add(navMeshPath.corners[navMeshPath.corners.Length - 1]);
@@ -285,25 +322,42 @@ public class irisBehaviour : MonoBehaviour
 
     void wandering() // Go to each checkpoint
     {
-
-        if (navPath == null || navPath.Count == 0)
+        if (followPath(navPath, true))
         {
-            StartCoroutine(updatePath());
+            ++currentCheckpoint;
+
+            if (currentCheckpoint > checkpoints.Count - 1)
+            {
+                currentCheckpoint = 0;
+            }
+
+            navPath = calculatePath(checkpoints[currentCheckpoint].position);
         }
+    }
 
-        followPath(navPath);
+    void rotateArm()
+    {
+        float targetAngle = Mathf.Atan2(playerTransform.position.y - forearmJoint.transform.position.y, playerTransform.position.x - forearmJoint.transform.position.x) * Mathf.Rad2Deg;
 
-        //if (followPath(navPath))
-        //{
-        //    ++currentCheckpoint;
+        float currentAngle = forearmJoint.transform.eulerAngles.z;
 
-        //    if (currentCheckpoint > checkpoints.Count - 1)
-        //    {
-        //        currentCheckpoint = 0;
-        //    }
-
-        //    navPath = calculatePath(checkpoints[currentCheckpoint]);
-        //}
+        float angleDifference = Mathf.DeltaAngle(currentAngle, targetAngle);
+        
+        // Use the motor to rotate the arm towards the target
+        if (Mathf.Abs(angleDifference) > 5)
+        {
+            forearmJoint.useMotor = true;
+            JointMotor2D motor = forearmJoint.motor;
+            motor.motorSpeed = aimSpeed * -Mathf.Sign(angleDifference);
+            motor.maxMotorTorque = 1000;
+            forearmJoint.motor = motor;
+        }
+        else
+        {
+            JointMotor2D motor = forearmJoint.motor;
+            motor.motorSpeed = 0;
+            forearmJoint.motor = motor;
+        }
     }
 
     void pathCorrection()
@@ -314,50 +368,135 @@ public class irisBehaviour : MonoBehaviour
         }
     }
 
+    Vector2 getCombatPosition()
+    {
+        List<Vector2> combatPositions = new List<Vector2>();
+
+        for (int i = 0; i < maxAttempts; ++i)
+        {
+            Vector2 randomOffset = Random.insideUnitCircle * searchRadius;
+            Vector2 candidatePosition = (Vector2)playerTransform.position + randomOffset;
+
+            if (NavMesh.SamplePosition(candidatePosition, out NavMeshHit hit, 1.0f, NavMesh.AllAreas))
+            {
+                combatPosition = hit.position;
+
+                if (isPositionStrategic(combatPosition))
+                {
+                    combatPositions.Add(combatPosition);
+                    Debug.DrawLine(combatPosition, (Vector2)playerTransform.position, Color.green, 5.0f);
+                }
+                else
+                {
+                    Debug.DrawLine(combatPosition, (Vector2)playerTransform.position, Color.red, 5.0f);
+                }
+            }
+            else
+            {
+                Debug.DrawLine(hit.position, (Vector2)playerTransform.position, Color.red, 5.0f);
+            }
+        }
+
+        // Return position furthest from player
+        if (combatPositions.Count > 0)
+        {
+            Vector2 furthestPosition = combatPositions[0];
+            float maxDistance = Vector2.Distance(playerTransform.position, furthestPosition);
+
+            for (int i = 1; i < combatPositions.Count; ++i)
+            {
+                float distance = Vector2.Distance(playerTransform.position, combatPositions[i]);
+                Debug.DrawLine(playerTransform.position, combatPositions[i], Color.green, 5.0f);
+                Debug.Log("Distance: " + distance);
+
+                if (distance > maxDistance)
+                {
+                    maxDistance = distance;
+                    furthestPosition = combatPositions[i];
+                }
+            }
+
+            Debug.DrawLine(furthestPosition, (Vector2)playerTransform.position, Color.cyan, 5.0f);
+
+            return furthestPosition;
+        }
+        else
+        {
+            Debug.Log("Failed to find strategic position, resorting to this position");
+
+            return transform.position;
+        }
+    }
+
+    bool isPositionStrategic(Vector2 position)
+    {
+
+        // Draw raycast from position and see if it hits player
+        RaycastHit2D hit = Physics2D.Raycast(position, (Vector2)playerTransform.position - position);;
+
+        // Something is blocking the path
+        if (hit.collider != null && !hit.collider.CompareTag("Player"))
+            return false;
+
+        // Close enough to enemy
+        if (Vector2.Distance(transform.position, position) >= maximumDistanceFromEnemy)
+            return false;
+
+        // Far enough from enemy
+        if (Vector2.Distance(transform.position, position) <= minimumDistanceFromEnemy)
+            return false;
+
+        // Far enough from player
+        if (Vector2.Distance(playerTransform.position, position) <= minimumDistanceToPlayer)
+            return false;
+
+        return true;
+    }
+
     void engaging()
     {
+        rotateArm();
+
         if (combatPosition == Vector2.zero)
         {
-            float r = radius * Mathf.Sqrt(Random.Range(0.0f, 1.0f));
-            float theta = Random.Range(0.0f, 1.0f) * 2 * Mathf.PI;
-            float x = playerTransform.position.x + r * MathF.Cos(theta);
-            float y = playerTransform.position.y + r * MathF.Sin(theta);
-
-            combatPosition = new Vector2(x, y);
-
-            Debug.Log("Combat position: " + combatPosition);
+            StartCoroutine(updateCombatPosition());
         }
 
-        Debug.DrawLine(transform.position, combatPosition, Color.yellow);
-
-        Debug.Log(inPosition);
-
-        if (!inPosition)
+        if (navPath.Count != 0)
         {
-            if (goToPosition(combatPosition, false))
-                inPosition = true;
-
-            return;
+            if (followPath(navPath, false))
+                lookAtObject(playerTransform.position);
         }
 
-        lookAtObject(playerTransform.position);
+        return;
     }
 
     // Update is called once per frame
     void Update()
     {
-        //Vector2 direction = playerTransform.position - eyeTransform.position;
-        //RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
-        //Debug.DrawRay(eyeTransform.position, direction, Color.cyan);
+        Vector2 direction = playerTransform.position - eyeTransform.position;
+        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
 
-        //if (hit.collider != null && currentState != EnemyState.Engaging)
+        if (hit.collider != null && currentState != EnemyState.Engaging)
+        {
+            if (hit.collider.CompareTag("Player"))
+            {
+                currentState = EnemyState.Engaging;
+                Debug.Log("Engaging player");
+            }
+        }
+
+        //if (Input.GetKey(KeyCode.R)) // For PID tuning
         //{
-        //    if (hit.collider.CompareTag("Player"))
-        //    {
-        //        currentState = EnemyState.Engaging;
-        //        Debug.Log("Engaging player");
-        //    }
+        //    Debug.Log("Resetting iris");
+        //    transform.position = resetPoint.position;
+        //    irisRB.angularVelocity = 0;
+        //    irisRB.linearVelocity = Vector2.zero;
+        //    irisRB.rotation = -90;
+        //    return;
         //}
+
+        //rotateArm();
 
         switch (currentState)
         {
@@ -379,9 +518,49 @@ public class irisBehaviour : MonoBehaviour
     {
         while (true)
         {
-            navPath = calculatePath(checkpoints[currentCheckpoint]);
+            if (currentState == EnemyState.Wandering)
+                navPath = calculatePath(checkpoints[currentCheckpoint].position);
+
+            else if (currentState == EnemyState.Engaging && combatPosition != Vector2.zero)
+                navPath = calculatePath(combatPosition);
+
+            else if (currentState == EnemyState.PathCorrection)
+                currentState = EnemyState.Wandering;
+
             Debug.Log("Path updated");
+
+            currentPathIndex = 0;
+
             yield return new WaitForSeconds(1.0f);
         }
+    }
+
+    private IEnumerator updateCombatPosition()
+    {
+        while(currentState == EnemyState.Engaging)
+        {
+            combatPosition = getCombatPosition();
+            Debug.Log("Combat position updated");
+
+            yield return new WaitForSeconds(repositionDelay);
+        }
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, distanceToEngage);
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, searchRadius);
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(playerTransform.position, minimumDistanceToPlayer);
+
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, maximumDistanceFromEnemy);
+
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, minimumDistanceFromEnemy);
     }
 }
