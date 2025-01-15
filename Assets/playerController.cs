@@ -1,4 +1,5 @@
 using System;
+using Unity.Cinemachine;
 using Unity.VisualScripting;
 using UnityEditor.Rendering;
 using UnityEngine;
@@ -16,6 +17,13 @@ public class playerController : MonoBehaviour
     public Transform rotationPoint;
     public GameObject elbowRaycast;
     public Camera camera;
+    public GameObject cameraTarget;
+    public float maxCameraDistanceX;
+    public float maxCameraDistanceY;
+    public float minCameraDistanceX;
+    public float minCameraDistanceY;
+    private bool cameraLock = SettingsManager.Instance.cameraLock;
+    public CinemachineCamera CinemachineCamera;
 
     public float thrust = 1.0f;
     public bool movementEnabled = true;
@@ -51,7 +59,19 @@ public class playerController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        if (SettingsManager.Instance == null)
+        {
+            Debug.Log("SettingsManager.Instance is null");
+            cameraLock = false;
+        }
+        else
+        {
+            cameraLock = SettingsManager.Instance.cameraLock;
+        }
+
         rb2D = GetComponent<Rigidbody2D>();
+
+        cameraTarget.transform.position = gameObject.transform.position;
 
         // Stop all particle systems
         thruster1.Stop();
@@ -272,11 +292,51 @@ public class playerController : MonoBehaviour
         }
     }
 
+    void updateCamera()
+    {
+        if (!cameraLock)
+        {
+            Vector3 cameraGoal = ClampCameraGoal(mousePos, transform.position);
+            Vector3 targetPosition = Vector3.Lerp(gameObject.transform.position, cameraGoal, 0.75f);
+
+            Vector3 offset = targetPosition - gameObject.transform.position;
+            if (Mathf.Abs(offset.x) > minCameraDistanceX || Mathf.Abs(offset.y) > minCameraDistanceY)
+            {
+                cameraTarget.transform.position = targetPosition;
+                CinemachineCamera.Follow = cameraTarget.transform;
+                print("Camera locked and following target");
+            }
+            else
+            {
+                CinemachineCamera.Follow = gameObject.transform;
+                print("Camera locked but too close to follow target");
+            }
+        }
+        else
+        {
+            CinemachineCamera.Follow = gameObject.transform;
+            print("Camera unlocked");
+        }
+    }
+
+    Vector3 ClampCameraGoal(Vector3 mousePos, Vector3 playerPos)
+    {
+        Vector3 cameraGoal = mousePos - playerPos;
+        return new Vector3(
+            Mathf.Clamp(cameraGoal.x, -maxCameraDistanceX, maxCameraDistanceX),
+            Mathf.Clamp(cameraGoal.y, -maxCameraDistanceY, maxCameraDistanceY),
+            0) + playerPos;
+    }
+
+
+
     void Update()
     {
         if (!movementEnabled) return;
 
         updateArm();
+
+
 
         fieldOfView.SetOrigin(transform.position);
 
@@ -284,6 +344,8 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        updateCamera();
+
         updateMovement();
     }
 }
