@@ -5,74 +5,125 @@ using UnityEngine.UI;
 
 public class Interaction : MonoBehaviour
 {
+
+    [Header("Image Related Settings")] 
     public Image Border;
     public RawImage image;
     public TextMeshProUGUI textLabel;
+    public RawImage rawImage;
+    public Texture example;
+
+    [Header("Variables")]
     public float TypingSpeed = 0.8f;
     public bool CanBeInteractedWith = true;
-    public bool Dissapear = false;
-
+    public bool Refresh = false;
+    public bool isImage = false;
     bool debounce = false;
     bool isOpen = false;
-    public RawImage rawImage;
-    public float scrollSpeed = 1f;
+    public string TextInp;
+    public Texture ImageInp;
     public Color selectedColor = new Color(0.4f, 0.6f, 1.0f);
-    public float swirlIntensity = 0.1f;
-    public float swirlSpeed = 2f;
-    public float glitchFrequency = 0.1f;
+   
 
     private Material material;
-    private float lastGlitchTime = 0;
+ 
     public float originalTimerValue = 0.5f;
-    float timer;
+  
 
     private void Start()
     {
         material = rawImage.material;
         material.SetColor("_Color", selectedColor);
-        StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
+         //StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
+        StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(75, 50));
 
     }
 
-    private void Update()
+
+ private void Update()
     {
-        if (Dissapear && !debounce)
+        if (Refresh && !debounce)
         {
             StartCoroutine(EndInteraction());
             debounce = true;
+
+           
+
         }
 
-        float swirlX = Mathf.Sin(Time.time * swirlSpeed + rawImage.uvRect.y * 10) * swirlIntensity;
-        float swirlY = Mathf.Cos(Time.time * swirlSpeed + rawImage.uvRect.x * 10) * swirlIntensity;
-
-        if (Time.time - lastGlitchTime > glitchFrequency)
-        {
-            rawImage.uvRect = new Rect(
-                Mathf.Sin(Time.time * 10) * swirlIntensity + swirlX,
-                (Time.time * scrollSpeed % 1) + swirlY,
-                1, 1
-            );
-            lastGlitchTime = Time.time;
-        }
-        else
-        {
-            rawImage.uvRect = new Rect(
-                Mathf.Sin(Time.time * 10) * swirlIntensity + swirlX,
-                (Time.time * scrollSpeed % 1) + swirlY,
-                1, 1
-            );
-        }
-
+       
+        
         material.SetColor("_Color", selectedColor);
-
-
     }
 
-    public void StartImageInteraction( Image image, Vector2 size)
+   
+
+
+    public void StartImageInteraction(Texture imageTexture, Vector2 position, Vector2 size)
+    {
+        if (CanBeInteractedWith)
+        {
+            rawImage.gameObject.SetActive(true);
+            Border.gameObject.SetActive(true);
+            textLabel.text = "";
+            if (imageTexture != null)
+            {
+                rawImage.texture = imageTexture;
+            }
+            else
+            {
+                rawImage.texture = null;
+                textLabel.text = "No Texture Available";
+            }
+         
+
+            rawImage.rectTransform.anchoredPosition = position;
+           Border.rectTransform.sizeDelta = size;
+           rawImage.rectTransform.sizeDelta = size;
+
+
+            StartCoroutine(AnimateImageAppearance());
+        }
+    }
+
+    private IEnumerator AnimateImageAppearance()
     {
 
-    }    
-    public void StartTextInteraction(string textInput, Vector2 position, float typeSpeed)
+        
+        float elapsedTime = 0f;
+        Vector2 initialSize = new Vector2(0, 0);
+        Vector2 targetSize = rawImage.rectTransform.sizeDelta;
+
+        rawImage.rectTransform.sizeDelta = initialSize;
+
+        while (elapsedTime < 0.1)
+        {
+            float heigth = Mathf.Lerp(0, rawImage.rectTransform.rect.height / 48, elapsedTime / 0.1f);
+            float width = Mathf.Lerp(0, Border.rectTransform.rect.width, elapsedTime / 0.1f);
+
+            image.rectTransform.sizeDelta = new Vector2(width, heigth);
+            elapsedTime += Time.deltaTime;
+
+            yield return null;
+        }
+
+        float expansionDuration = originalTimerValue;
+         elapsedTime = 0f;
+
+
+
+        while (elapsedTime < expansionDuration)
+        {
+            float width = Mathf.Lerp(image.rectTransform.rect.width, Border.rectTransform.rect.width, elapsedTime / expansionDuration);
+            float height = Mathf.Lerp(image.rectTransform.rect.height, Border.rectTransform.rect.height, elapsedTime / expansionDuration);
+            image.rectTransform.sizeDelta = new Vector2(width, height);
+            elapsedTime += Time.deltaTime;
+            yield return null;
+        }
+
+        rawImage.rectTransform.sizeDelta = targetSize;
+    }
+    public void StartTextInteraction(string textInput, Vector2 position, float typeSpeed, Vector2 size)
     {
         if (CanBeInteractedWith)
         {
@@ -89,7 +140,10 @@ public class Interaction : MonoBehaviour
             #endregion
 
             CanBeInteractedWith = false;
-
+            textLabel.text = "";
+            rawImage.texture = null;
+            Border.rectTransform.sizeDelta = size;
+            rawImage.rectTransform.sizeDelta = size;
             StartCoroutine(StartTypeANDExpand(textInput, position, typeSpeed));
         }
 
@@ -121,7 +175,7 @@ public class Interaction : MonoBehaviour
 
         while (elapsedTime < 0.1)
         {
-            float heigth = Mathf.Lerp(0, 2.9216f, elapsedTime / 0.1f);
+            float heigth = Mathf.Lerp(0, rawImage.rectTransform.rect.height / 48, elapsedTime / 0.1f);
             float width = Mathf.Lerp(0, Border.rectTransform.rect.width, elapsedTime / 0.1f);
 
             image.rectTransform.sizeDelta = new Vector2(width, heigth);
@@ -155,7 +209,7 @@ public class Interaction : MonoBehaviour
             includeArrow = !includeArrow;
             yield return new WaitForSeconds(speed);
         }
-        while (!Dissapear)
+        while (!Refresh)
         {
             textLabel.text = includeArrow ? $"> {text}" : $"  {text}";
             includeArrow = !includeArrow;
@@ -181,7 +235,7 @@ public class Interaction : MonoBehaviour
 
         while (elapsedTime < 0.1)
         {
-            float heigth = Mathf.Lerp(image.rectTransform.rect.height, 2.9216f, elapsedTime / 0.1f);
+            float heigth = Mathf.Lerp(image.rectTransform.rect.height, rawImage.rectTransform.rect.height / 48, elapsedTime / 0.1f);
 
             image.rectTransform.sizeDelta = new Vector2(image.rectTransform.rect.width, heigth);
             elapsedTime += Time.deltaTime;
@@ -208,6 +262,11 @@ public class Interaction : MonoBehaviour
 
 
         CanBeInteractedWith = true;
+        debounce = false;
+        Refresh = false;
+
+
+        if (isImage) { StartImageInteraction(ImageInp, new Vector2(0, 0), new Vector2(140, 50)); } else { StartTextInteraction(TextInp, new Vector2(0, 0), 0.2f, new Vector2(140, 50)); }
 
     }
 
