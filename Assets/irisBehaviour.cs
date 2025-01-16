@@ -25,15 +25,11 @@ public class irisBehaviour : MonoBehaviour
     }
 
     [Header("Movement")]
-    public float moveSpeed = 1.0f;
-
-    [Range(0.0f, 1.0f)]
-    public float breakStart = 0.75f;
-
-    [Range(0.0f, 1.0f)]
-    public float breakEnd = 0.90f;
-
+    public float moveSpeed = 5.0f;
     public float breakSpeed = 20f;
+    public float distanceToBreak = 3.0f;
+    public float minSpeed = 1.0f;
+
     private float targetSpeed = 0.0f;
 
     [Header("Targeting")]
@@ -62,6 +58,8 @@ public class irisBehaviour : MonoBehaviour
     public float minimumDistanceToPlayer = 2.0f;
     public float minimumDistanceFromEnemy = 6.0f;
     public float maximumDistanceFromEnemy = 4.0f;
+    public Transform muzzle;
+    public Transform lastSeenPosition;
 
     private Vector2 combatPosition = new Vector2(0, 0);
 
@@ -104,20 +102,16 @@ public class irisBehaviour : MonoBehaviour
         motor = forearmJoint.motor;
     }
 
-    public float calculateVelocity(float progress, float vMax, float vMin, float breakStart = 0.65f, float breakEnd = 0.90f, float breakSpeed = 10f)
+    public float calculateVelocity(float vMax, float vMin, float distanceToBreak, float distanceToTarget, float breakSpeed = 10f)
     {
-        if(progress >= breakEnd)
-        {
-            return moveSpeed / 2;
-        }
-        if (progress < breakStart)
+        if(distanceToTarget > distanceToBreak)
         {
             return vMax;
         }
-        else
+        else // Break speed increases exponentially with distance to target
         {
-            float expTerm = Mathf.Exp(-breakSpeed * (progress - breakStart));
-            return vMax * expTerm + vMin * (1 - expTerm);
+            float t = distanceToTarget / distanceToBreak; // Normalize distance (0 to 1)
+            return Mathf.Lerp(vMin, vMax, Mathf.Exp(-breakSpeed * t));
         }
     }
 
@@ -129,13 +123,9 @@ public class irisBehaviour : MonoBehaviour
 
         // Calculate PID terms
         integral += error * Time.fixedDeltaTime;  // Integral term
-        integral = Mathf.Clamp(integral, -10f, 10f);  // Limit integral to prevent windup
+        integral = Mathf.Clamp(integral, -10f, 10f);  // Prevent windup
 
-        float derivative = (error - previousError) / Time.fixedDeltaTime;
-        float smoothingFactor = 0.9f; // Smoothing for derivative term
-        derivative = smoothingFactor * derivative + (1 - smoothingFactor) * previousDerivative;
-        previousDerivative = derivative;
-
+        float derivative = (error - previousError) / Time.fixedDeltaTime;  // Derivative term
         previousError = error;
 
         // Compute the control signal (torque)
@@ -153,8 +143,7 @@ public class irisBehaviour : MonoBehaviour
         return torque;
     }
 
-
-    void lookAtObject(Vector2 targetPos)
+    bool lookAtObject(Vector2 targetPos)
     {
         Vector2 direction = ((Vector3)targetPos - transform.position).normalized;
 
@@ -166,22 +155,23 @@ public class irisBehaviour : MonoBehaviour
         torque = Mathf.Clamp(torque, -maximumTurnSpeed, maximumTurnSpeed);
 
         irisRB.AddTorque(torque);
+
+        return torque > 0.05 ? false : true;
     }
 
     bool goToPosition(Vector2 target, bool pathCorrection)
     {
         Vector2 direction = ((Vector3)target - transform.position).normalized;
         float angle = Vector2.SignedAngle(transform.up, direction);
-
-        //Debug.Log(irisRB.linearVelocity.magnitude);
+        float distanceToTarget = Vector2.Distance(transform.position, target);
 
         //Debug.DrawLine(transform.position, target, Color.red);
-        //Debug.DrawLine(startPos, target, Color.green);
+        Debug.DrawLine(startPos, target, Color.green);
 
         float maxDistance = pathCorrection ? maxDistanceToTarget : maxDistanceToCorrect;
         
         // Check if target is reached
-        if (Vector2.Distance(transform.position, target) < maxDistance && irisRB.linearVelocity.magnitude < maxSpeedForNextTarget)
+        if (distanceToTarget < maxDistance && irisRB.linearVelocity.magnitude < maxSpeedForNextTarget)
         {
             if (pathCorrection)
             {
@@ -197,22 +187,20 @@ public class irisBehaviour : MonoBehaviour
         if (Mathf.Abs(angle) < angleThreshold)
         {
             targetSpeed = moveSpeed;
-            float currentDistance = Vector2.Distance(transform.position, target);
-            float progress = 1 - currentDistance / Vector2.Distance(startPos, target);
 
-            targetSpeed = calculateVelocity(progress, moveSpeed, -moveSpeed, breakStart, breakEnd, breakSpeed);
+            targetSpeed = calculateVelocity(moveSpeed, -moveSpeed, distanceToBreak, distanceToTarget, breakSpeed);
 
             if (irisRB.linearVelocity.magnitude < moveSpeed) // If we are not at max speed
             {
                 if (targetSpeed < 0) // If we are breaking
                 {
-                    if(irisRB.linearVelocity.magnitude > moveSpeed / 2) // If we are not at half speed or less
+                    if(irisRB.linearVelocity.magnitude > minSpeed) // If we are not at half speed or less
                     {
                         irisRB.AddForce(transform.up * targetSpeed);
                     }
                     else
                     {
-                        irisRB.AddForce(transform.up * moveSpeed / 2);
+                        irisRB.AddForce(transform.up * minSpeed);
                     }
                 }
                 else // If we are accelerating
@@ -226,7 +214,7 @@ public class irisBehaviour : MonoBehaviour
         lookAtObject(target);
 
         // Check if path correction is needed
-        if (pathCorrection && Vector2.Distance(transform.position, target) >= 1.0)
+        if (pathCorrection && distanceToTarget >= 1.0)
         {
             // Calculate vectors pointing from C to A and C to B
             Vector2 vectorCA = (Vector2)transform.position - target;
@@ -335,7 +323,7 @@ public class irisBehaviour : MonoBehaviour
         }
     }
 
-    void rotateArm()
+    bool rotateArm()
     {
         float targetAngle = Mathf.Atan2(playerTransform.position.y - forearmJoint.transform.position.y, playerTransform.position.x - forearmJoint.transform.position.x) * Mathf.Rad2Deg;
 
@@ -349,14 +337,18 @@ public class irisBehaviour : MonoBehaviour
             forearmJoint.useMotor = true;
             JointMotor2D motor = forearmJoint.motor;
             motor.motorSpeed = aimSpeed * -Mathf.Sign(angleDifference);
-            motor.maxMotorTorque = 1000;
+            motor.maxMotorTorque = aimSpeed;
             forearmJoint.motor = motor;
+
+            return false;
         }
         else
         {
             JointMotor2D motor = forearmJoint.motor;
             motor.motorSpeed = 0;
             forearmJoint.motor = motor;
+
+            return true;
         }
     }
 
@@ -368,7 +360,7 @@ public class irisBehaviour : MonoBehaviour
         }
     }
 
-    Vector2 getCombatPosition()
+    Vector2 getCombatPosition(bool seePlayer, float searchRadius, float maximumDistanceFromEnemy, float minimumDistanceFromEnemy, float minimumDistancefromPlayer)
     {
         List<Vector2> combatPositions = new List<Vector2>();
 
@@ -381,7 +373,7 @@ public class irisBehaviour : MonoBehaviour
             {
                 combatPosition = hit.position;
 
-                if (isPositionStrategic(combatPosition))
+                if (isPositionStrategic(combatPosition, seePlayer, maximumDistanceFromEnemy, minimumDistanceFromEnemy, minimumDistancefromPlayer))
                 {
                     combatPositions.Add(combatPosition);
                     Debug.DrawLine(combatPosition, (Vector2)playerTransform.position, Color.green, 5.0f);
@@ -393,7 +385,7 @@ public class irisBehaviour : MonoBehaviour
             }
             else
             {
-                Debug.DrawLine(hit.position, (Vector2)playerTransform.position, Color.red, 5.0f);
+                Debug.DrawLine(hit.position, (Vector2)playerTransform.position, Color.black, 5.0f);
             }
         }
 
@@ -428,34 +420,50 @@ public class irisBehaviour : MonoBehaviour
         }
     }
 
-    bool isPositionStrategic(Vector2 position)
+    bool isPositionStrategic(Vector2 position, bool seePlayer, float maximumDistanceFromEnemy, float minimumDistanceFromEnemy, float minimumDistancefromPlayer)
     {
+        if (seePlayer)
+        {
+            // Draw raycast from position and see if it hits player
+            RaycastHit2D hit = Physics2D.Raycast(position, (Vector2)playerTransform.position - position);
+            Debug.DrawRay(position, (Vector2)playerTransform.position - position, Color.red);
 
-        // Draw raycast from position and see if it hits player
-        RaycastHit2D hit = Physics2D.Raycast(position, (Vector2)playerTransform.position - position);;
-
-        // Something is blocking the path
-        if (hit.collider != null && !hit.collider.CompareTag("Player"))
-            return false;
+            // Something is blocking the path
+            if (hit.collider != null && !hit.collider.CompareTag("Player"))
+            {
+                //Debug.Log(hit.collider);
+                return false;
+            }
+        }
 
         // Close enough to enemy
         if (Vector2.Distance(transform.position, position) >= maximumDistanceFromEnemy)
+        {
+            //Debug.Log("Too far from enemy");
             return false;
+        }
 
         // Far enough from enemy
         if (Vector2.Distance(transform.position, position) <= minimumDistanceFromEnemy)
+        {
+            //Debug.Log("Too close to enemy");
             return false;
+        }
+
 
         // Far enough from player
         if (Vector2.Distance(playerTransform.position, position) <= minimumDistanceToPlayer)
+        {
+            //Debug.Log("Too close to player");
             return false;
+        }
+
 
         return true;
     }
 
     void engaging()
     {
-        rotateArm();
 
         if (combatPosition == Vector2.zero)
         {
@@ -465,27 +473,34 @@ public class irisBehaviour : MonoBehaviour
         if (navPath.Count != 0)
         {
             if (followPath(navPath, false))
-                lookAtObject(playerTransform.position);
+            {
+                if (lookAtObject(playerTransform.position))
+                {
+                    rotateArm();
+                }
+            }
+                
         }
 
         return;
     }
 
-    // Update is called once per frame
-    void Update()
+    void fleeing()
     {
-        Vector2 direction = playerTransform.position - eyeTransform.position;
-        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
+        if (Vector2.Distance(combatPosition, playerTransform.position) < 15.0f)
+            combatPosition = getCombatPosition(false, 100.0f, 500.0f, 15.0f, 10.0f);
 
-        if (hit.collider != null && currentState != EnemyState.Engaging)
+        StopCoroutine(updateCombatPosition());
+
+        if (navPath.Count != 0)
         {
-            if (hit.collider.CompareTag("Player"))
-            {
-                currentState = EnemyState.Engaging;
-                Debug.Log("Engaging player");
-            }
+            followPath(navPath, false);
         }
-
+    }
+    
+    // Update is called once per frame
+    void FixedUpdate()
+    {
         //if (Input.GetKey(KeyCode.R)) // For PID tuning
         //{
         //    Debug.Log("Resetting iris");
@@ -496,7 +511,22 @@ public class irisBehaviour : MonoBehaviour
         //    return;
         //}
 
-        //rotateArm();
+        Vector2 direction = playerTransform.position - eyeTransform.position;
+        RaycastHit2D hit = Physics2D.Raycast(eyeTransform.position, direction, distanceToEngage);
+
+        if (hit.collider != null)
+        {
+            if (hit.collider.CompareTag("Player") && currentState == EnemyState.Wandering) // If we see the player
+            {
+                currentState = EnemyState.Engaging;
+                lastSeenPosition = playerTransform;
+            }
+
+            if (!hit.collider.CompareTag("Player") && currentState == EnemyState.Engaging) // If we lost sight of the player
+            {
+                currentState = EnemyState.Searching;
+            }
+        }
 
         switch (currentState)
         {
@@ -511,6 +541,14 @@ public class irisBehaviour : MonoBehaviour
             case EnemyState.Engaging:
                 engaging();
                 break;
+
+            case EnemyState.Fleeing:
+                fleeing();
+                break;
+
+            case EnemyState.Searching:
+
+                break;
         }
     }
 
@@ -521,7 +559,7 @@ public class irisBehaviour : MonoBehaviour
             if (currentState == EnemyState.Wandering)
                 navPath = calculatePath(checkpoints[currentCheckpoint].position);
 
-            else if (currentState == EnemyState.Engaging && combatPosition != Vector2.zero)
+            else if ((currentState == EnemyState.Engaging || currentState == EnemyState.Fleeing) && (combatPosition != Vector2.zero))
                 navPath = calculatePath(combatPosition);
 
             else if (currentState == EnemyState.PathCorrection)
@@ -539,7 +577,7 @@ public class irisBehaviour : MonoBehaviour
     {
         while(currentState == EnemyState.Engaging)
         {
-            combatPosition = getCombatPosition();
+            combatPosition = getCombatPosition(true, searchRadius, maximumDistanceFromEnemy, minimumDistanceFromEnemy, minimumDistanceToPlayer);
             Debug.Log("Combat position updated");
 
             yield return new WaitForSeconds(repositionDelay);
@@ -554,13 +592,16 @@ public class irisBehaviour : MonoBehaviour
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, searchRadius);
 
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(playerTransform.position, minimumDistanceToPlayer);
+        if(currentState == EnemyState.Engaging)
+        {
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(playerTransform.position, minimumDistanceToPlayer);
 
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireSphere(transform.position, maximumDistanceFromEnemy);
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(transform.position, maximumDistanceFromEnemy);
 
-        Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(transform.position, minimumDistanceFromEnemy);
+            Gizmos.color = Color.cyan;
+            Gizmos.DrawWireSphere(transform.position, minimumDistanceFromEnemy);
+        }
     }
 }
