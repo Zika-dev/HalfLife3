@@ -1,9 +1,10 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Interaction : MonoBehaviour
+public class Interaction : MonoBehaviour,  IDragHandler
 {
 
     [Header("Image Related Settings")] 
@@ -30,7 +31,38 @@ public class Interaction : MonoBehaviour
     private Material material;
  
     public float originalTimerValue = 0.5f;
-  
+    public float fontSizeScale = 5f;
+
+    [Header("DEBUG")]
+
+    public bool Drag_Position = false;
+    public bool Drag_Size = false;
+    public bool GetCurrentPosition = false;
+    public bool GetCurrentSize = false;
+    public Canvas canvasRectTransform;
+    private Vector2 originalSize;
+    private Vector2 originalMousePosition;
+    void IDragHandler.OnDrag(PointerEventData eventData)
+    {
+        if(Drag_Position)
+        Border.rectTransform.anchoredPosition += eventData.delta / canvasRectTransform.scaleFactor;
+
+
+        if (Drag_Size)
+        {
+            Vector2 currentMousePosition;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(rawImage.rectTransform, eventData.position, eventData.pressEventCamera, out currentMousePosition);
+
+            Vector2 sizeDelta = currentMousePosition - originalMousePosition;
+            rawImage.rectTransform.sizeDelta = originalSize + new Vector2(sizeDelta.x, sizeDelta.y);
+        }
+
+    }
+    public void OnBeginDrag(PointerEventData eventData)
+    {
+        originalSize = rawImage.rectTransform.sizeDelta;
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(rawImage.rectTransform, eventData.position, eventData.pressEventCamera, out originalMousePosition);
+    }
 
     private void Start()
     {
@@ -53,14 +85,30 @@ public class Interaction : MonoBehaviour
 
         }
 
-       
-        
+
+
+        float imageWidth = rawImage.rectTransform.rect.width;
+        float imageHeight = rawImage.rectTransform.rect.height;
+
+        textLabel.fontSize = Mathf.RoundToInt(Mathf.Min(imageWidth, imageHeight) / fontSizeScale );
         material.SetColor("_Color", selectedColor);
     }
 
-   
 
 
+    private void FixedUpdate()
+    {
+        if (GetCurrentPosition)
+        {
+            Debug.Log("Current Prompt Position: " + Border.rectTransform.position);
+            GetCurrentPosition = false;
+        }
+        if (GetCurrentSize)
+        {
+            Debug.Log("Current Prompt Size: " + rawImage.rectTransform.sizeDelta);
+            GetCurrentSize = false;
+        }
+    }
     public void StartImageInteraction(Texture imageTexture, Vector2 position, Vector2 size)
     {
         if (CanBeInteractedWith)
@@ -203,7 +251,6 @@ public class Interaction : MonoBehaviour
 
 
 
-        // Start Typing
         bool includeArrow = true;
         for (int i = 0; i <= text.Length; i++)
         {
