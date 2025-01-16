@@ -176,7 +176,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '> Kill yourself'
+  m_text: '
+
+'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 14eafc5cc7153874da9b05fc2e43634b, type: 2}
   m_sharedMaterial: {fileID: 8463982600077539532, guid: 14eafc5cc7153874da9b05fc2e43634b, type: 2}
