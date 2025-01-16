@@ -22,6 +22,8 @@ public class Interaction : MonoBehaviour
     bool isOpen = false;
     public string TextInp;
     public Texture ImageInp;
+    public Vector2 posInp;
+    public Vector2 sizeInp;
     public Color selectedColor = new Color(0.4f, 0.6f, 1.0f);
    
 
@@ -35,7 +37,7 @@ public class Interaction : MonoBehaviour
         material = rawImage.material;
         material.SetColor("_Color", selectedColor);
          //StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
-        StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(75, 50));
+        StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(140, 50));
 
     }
 
@@ -213,7 +215,7 @@ public class Interaction : MonoBehaviour
         {
             textLabel.text = includeArrow ? $"> {text}" : $"  {text}";
             includeArrow = !includeArrow;
-            yield return new WaitForSeconds(TypingSpeed);
+            yield return new WaitForSeconds(0.5f);
         }
         CanBeInteractedWith = true;
 
@@ -266,7 +268,7 @@ public class Interaction : MonoBehaviour
         Refresh = false;
 
 
-        if (isImage) { StartImageInteraction(ImageInp, new Vector2(0, 0), new Vector2(140, 50)); } else { StartTextInteraction(TextInp, new Vector2(0, 0), 0.2f, new Vector2(140, 50)); }
+        if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp,TypingSpeed, sizeInp); }
 
     }
 

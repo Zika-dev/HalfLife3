@@ -34,4 +34,14 @@ public class ButtonClick : MonoBehaviour
         Debug.Log(nextLevelIndex);
         SceneManager.LoadScene(nextLevelIndex);
     }
+
+
+    public void QuitClick()
+    {
+    #if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+    #else
+      Application.Quit();    
+    #endif
+    }
 }
