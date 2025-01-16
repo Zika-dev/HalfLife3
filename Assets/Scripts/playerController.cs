@@ -1,12 +1,6 @@
-using JetBrains.Annotations;
-using System;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
-
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Rendering.VirtualTexturing;
-using UnityEngine.UIElements;
 
 public class playerController : MonoBehaviour
 {
@@ -42,6 +36,8 @@ public class playerController : MonoBehaviour
     public ParticleSystem[] thrusters;
     public GameObject[] thrusterLights;
     public ParticleSystem targetParticles;
+    public GameObject attractionParticles;
+    private GameObject instantiatedAttractionParticles;
     public GameObject repellEffect;
     private GameObject instantiatedRepellEffect;
     [Space]
@@ -141,9 +137,9 @@ public class playerController : MonoBehaviour
         {
             canRelease = true;
             canAttract = true;
-            if (targetParticles != null)
+            if (instantiatedAttractionParticles != null)
             {
-                targetParticles.Stop();
+                Destroy(instantiatedAttractionParticles);
             }
         }
 
@@ -160,14 +156,23 @@ public class playerController : MonoBehaviour
                     GameObject obj = hit.collider.gameObject;
                     Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
                     if (rigidbody2D == null) return;
-                    targetParticles = obj.GetComponentInChildren<ParticleSystem>();
+                    
 
                     float distance = Vector2.Distance(armTip.position, obj.transform.position);
+
                     // Apply attraction force if within range
                     if (distance < range && distance > lockRange)
                     {
                         Debug.DrawLine(armTip.position, hit.point, Color.magenta);
-                        targetParticles.transform.position = hit.point;
+
+                        if (targetParticles == null)
+                        {
+                            instantiatedAttractionParticles = Instantiate(attractionParticles, obj.transform.position, obj.transform.rotation);
+                            targetParticles = instantiatedAttractionParticles.GetComponent<ParticleSystem>();
+                        }
+
+                        targetParticles.transform.position = obj.transform.position;
+
                         if(!targetParticles.isPlaying)
                             targetParticles.Play();
 
@@ -186,6 +191,10 @@ public class playerController : MonoBehaviour
                         canRelease = false;  // Require mouse release before allowing release
                         Debug.Log("Object locked");
                     }
+                }
+                else if (targetParticles != null)
+                {
+                    targetParticles.Stop();
                 }
             }
             else if (lockedItem && canRelease)  // Release locked object if allowed
