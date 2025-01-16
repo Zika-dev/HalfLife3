@@ -22,7 +22,7 @@ public class playerController : MonoBehaviour
     public float maxCameraDistanceY;
     public float minCameraDistanceX;
     public float minCameraDistanceY;
-    private bool cameraLock = SettingsManager.Instance.cameraLock;
+    private bool cameraLock;
     public CinemachineCamera CinemachineCamera;
 
     public float thrust = 1.0f;
@@ -133,7 +133,10 @@ public class playerController : MonoBehaviour
         {
             canRelease = true;
             canAttract = true;
-            targetParticles.Stop();
+            if (targetParticles != null)
+            {
+                targetParticles.Stop();
+            }
         }
 
         // Right mouse button pressed for attracting or releasing objects
@@ -308,18 +311,18 @@ public class playerController : MonoBehaviour
             {
                 cameraTarget.transform.position = targetPosition;
                 CinemachineCamera.Follow = cameraTarget.transform;
-                print("Camera locked and following target");
+                //print("Camera locked and following target");
             }
             else
             {
                 CinemachineCamera.Follow = gameObject.transform;
-                print("Camera locked but too close to follow target");
+                //print("Camera locked but too close to follow target");
             }
         }
         else
         {
             CinemachineCamera.Follow = gameObject.transform;
-            print("Camera unlocked");
+            //print("Camera unlocked");
         }
     }
 
