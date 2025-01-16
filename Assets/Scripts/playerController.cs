@@ -49,6 +49,8 @@ public class playerController : MonoBehaviour
     GameObject lockedObject;
     public Rigidbody2D lockedRigidbody2D;
 
+    public Typing cutSceneScript;
+
     private bool canRelease = false;
     private bool canAttract = true;
 
@@ -59,6 +61,8 @@ public class playerController : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        CinemachineCamera.Follow = gameObject.transform;
+
         if (SettingsManager.Instance == null)
         {
             Debug.Log("SettingsManager.Instance is null");
@@ -344,7 +348,10 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        updateCamera();
+        if (cutSceneScript.doneTyping)
+        {
+            updateCamera();
+        }
 
         updateMovement();
     }
