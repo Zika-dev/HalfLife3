@@ -22,7 +22,7 @@ public class playerController : MonoBehaviour
     public float maxCameraDistanceY;
     public float minCameraDistanceX;
     public float minCameraDistanceY;
-    private bool cameraLock = SettingsManager.Instance.cameraLock;
+    private bool cameraLock;
     public CinemachineCamera CinemachineCamera;
 
     public float thrust = 1.0f;
@@ -129,7 +129,10 @@ public class playerController : MonoBehaviour
         {
             canRelease = true;
             canAttract = true;
-            targetParticles.Stop();
+            if (targetParticles != null)
+            {
+                targetParticles.Stop();
+            }
         }
 
         // Right mouse button pressed for attracting or releasing objects
