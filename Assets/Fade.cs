@@ -12,13 +12,17 @@ public class NewMonoBehaviourScript : MonoBehaviour
     public GameObject eyes;
     public Sprite eyesSleepy;
     public eyebehavior eyeswitch;
+    
 
     private SpriteRenderer image;
     void Start()
     {
         image = GetComponent<SpriteRenderer>();
         StartCoroutine(FadeOut());
-        StartCoroutine(eyeswitch.changeEyes(eyesSleepy, 3500));
+        
+       
+            StartCoroutine(eyeswitch.changeEyes(eyesSleepy, 2800));
+        
     }
 
     IEnumerator FadeOut()
@@ -28,12 +32,16 @@ public class NewMonoBehaviourScript : MonoBehaviour
         while (time < TimeToWait)
         {
             time += Time.deltaTime;
-
             yield return null;
         }
         float elapsedTime = 0f;
-        healthbar.SetActive(true);
-        eyes.SetActive(true);
+
+        if (healthbar != null && eyes != null)
+        {
+            healthbar.SetActive(true);
+            eyes.SetActive(true);
+        }
+          
 
         while (elapsedTime < fadeDuration)
         {
@@ -45,6 +53,7 @@ public class NewMonoBehaviourScript : MonoBehaviour
             
             yield return null;
         }
+        Destroy(gameObject);
         
 
     }

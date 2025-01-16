@@ -144,12 +144,24 @@ public class ChargingPod : MonoBehaviour
             podIdle.SetActive(false);
             podCharging.SetActive(true);
             smoke.Play();
-            
 
-            
-            damageBehavior.health = 3;
+
+            StartCoroutine(HealPlayer(damageBehavior.MaxHealth, gameObject.transform.position));
             StartCoroutine(stopSmoke());
         }
+
+    }
+
+
+    IEnumerator HealPlayer(float healingAmount, Vector3 chargepodLocation)
+    {
+        while (healingAmount > 0 && damageBehavior.MaxHealth > damageBehavior.CurrentHealth)
+        {
+            damageBehavior.HealDamage(damageBehavior.MaxHealth /50, chargepodLocation);
+            healingAmount--;
+            yield return new WaitForSeconds(0.1f);
+        }
+
 
     }
 
