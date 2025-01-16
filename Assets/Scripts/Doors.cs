@@ -30,14 +30,13 @@ public class Doors :MonoBehaviour
         door1StartPos = door1.transform.position;
         door2StartPos = door2.transform.position;
         pivotRotation = gameObject.transform.eulerAngles;
-        distanceToPlayer = Vector3.Distance(gameObject.transform.position, player.transform.position) * doorPivotMultiplier;
     }
 
     private void Update()
     {
         float angleToPlayer = Vector3.Angle(new Vector3(0, 1, 0), gameObject.transform.position - player.transform.position);
+        distanceToPlayer = Vector3.Distance(gameObject.transform.position, player.transform.position) * doorPivotMultiplier;
 
-        //set values depending on door rotation
         if (pivotRotation.x == 0)
         {
             doorRotationY = distanceToPlayer;
@@ -53,7 +52,6 @@ public class Doors :MonoBehaviour
             doorOpenDistanceVec = new Vector3(-doorOpenDistance, 0, 0);
         }
 
-        //check what side of the door player is
         if (checkSide == true)
         {
             gameObject.transform.rotation = Quaternion.Euler(new Vector3(doorRotationX, -doorRotationY, 0) + pivotRotation);
@@ -66,7 +64,6 @@ public class Doors :MonoBehaviour
 
     private void FixedUpdate()
     {
-        //autodoor check
         if (doorAutoOpen == true && distanceToPlayer < doorAutoOpenDistance)
         {
             doorOpen = true;
@@ -76,16 +73,15 @@ public class Doors :MonoBehaviour
             doorOpen = false;
         }
 
-        //is door open/closed
         if (!isMoving && doorOpen != isOpen && Time.time - timeSinceLastActivation > moveSpeed)
         {
             isMoving = true;
             factor = 0f;
         }
 
-        //move door to current state
         if (isMoving)
         {
+            // Increase factor over time
             factor += Time.deltaTime * moveSpeed;
             factor = Mathf.Clamp01(factor);
 
