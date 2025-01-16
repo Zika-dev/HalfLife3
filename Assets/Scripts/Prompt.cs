@@ -26,7 +26,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
     public Vector2 posInp;
     public Vector2 sizeInp;
     public Color selectedColor = new Color(0.4f, 0.6f, 1.0f);
-   
+    public float timeUntilDissapear = 5f;
 
     private Material material;
  
@@ -42,6 +42,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
     public Canvas canvasRectTransform;
     private Vector2 originalSize;
     private Vector2 originalMousePosition;
+    public bool Dissapear = false;
     void IDragHandler.OnDrag(PointerEventData eventData)
     {
         if(Drag_Position)
@@ -68,8 +69,9 @@ public class Interaction : MonoBehaviour,  IDragHandler
     {
         material = rawImage.material;
         material.SetColor("_Color", selectedColor);
-         //StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
-        StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(140, 50));
+        //StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
+        //StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(140, 50));
+        EndInteraction();
 
     }
 
@@ -84,8 +86,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
            
 
         }
-
-
+      
 
         float imageWidth = rawImage.rectTransform.rect.width;
         float imageHeight = rawImage.rectTransform.rect.height;
@@ -266,6 +267,20 @@ public class Interaction : MonoBehaviour,  IDragHandler
         }
         CanBeInteractedWith = true;
 
+
+
+        float time = 0f;
+
+        while(time < timeUntilDissapear)
+        {
+            time += Time.deltaTime;
+
+        }
+        EndInteraction();
+
+
+
+
     }
 
 
@@ -315,7 +330,17 @@ public class Interaction : MonoBehaviour,  IDragHandler
         Refresh = false;
 
 
-        if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp,TypingSpeed, sizeInp); }
+        //if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp,TypingSpeed, sizeInp); }
+
+    }
+
+    void DissapearNOW()
+    {
+        textLabel.text = "";
+        image.rectTransform.sizeDelta = new Vector2(0, 0);
+        CanBeInteractedWith = true;
+        debounce = false;
+        Refresh = false;
 
     }
 

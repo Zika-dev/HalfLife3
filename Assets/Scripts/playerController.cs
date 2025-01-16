@@ -1,7 +1,8 @@
+using JetBrains.Annotations;
 using System;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
-using UnityEditor.Rendering;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering.VirtualTexturing;
@@ -9,56 +10,62 @@ using UnityEngine.UIElements;
 
 public class playerController : MonoBehaviour
 {
-    [SerializeField] FieldOfView fieldOfView;
+    
+    [SerializeField] private FieldOfView fieldOfView;
 
+    [Header("Movement and Physics")]
     private Rigidbody2D rb2D;
+    public float thrust = 1.0f;
+    public bool movementEnabled = true;
+    [Space]
+    [Header("Arm Control")]
     public Transform armTarget;
     public Transform armTip;
     public Transform rotationPoint;
     public GameObject elbowRaycast;
+    [Space]
+    [Header("Camera Control")]
     public Camera camera;
     public GameObject cameraTarget;
+    public CinemachineCamera CinemachineCamera;
     public float maxCameraDistanceX;
     public float maxCameraDistanceY;
     public float minCameraDistanceX;
     public float minCameraDistanceY;
     private bool cameraLock;
-    public CinemachineCamera CinemachineCamera;
+    [Space]
 
-    public float thrust = 1.0f;
-    public bool movementEnabled = true;
-
-    ParticleSystem targetParticles;
-    public GameObject repellEffect;
-
-    public ParticleSystem thruster1;
-    public ParticleSystem thruster2;
-    public ParticleSystem thruster3;
-    public ParticleSystem thruster4;
-    public GameObject thrusterLight1;
-    public GameObject thrusterLight2;
-    public GameObject thrusterLight3;
-    public GameObject thrusterLight4;
-
+    [Header("Mouse Input")]
     private Vector3 mousePos;
 
+    [Header("Thrusters and Effects")]
+    public ParticleSystem[] thrusters;
+    public GameObject[] thrusterLights;
+    public ParticleSystem targetParticles;
+    public GameObject repellEffect;
+    private GameObject instantiatedRepellEffect;
+    [Space]
+    [Header("Object Interaction")]
     public float range = 3.0f;
     public float lockRange = 0.1f;
     public float attractStrength = 1f;
     private bool lockedItem = false;
-    GameObject lockedObject;
-    public Rigidbody2D lockedRigidbody2D;
-
-    public Typing cutSceneScript;
-
     private bool canRelease = false;
     private bool canAttract = true;
-
-    private GameObject instantiatedRepellEffect;
+    private GameObject lockedObject;
+    public Rigidbody2D lockedRigidbody2D;
+    [Space]
+    [Header("Collision and Preventers")]
     public LayerMask collisonIgnore;
     public GameObject clipPreventor;
     public GameObject pivot;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Space]
+    [Header("Miscellaneous")]
+    public Typing cutSceneScript;
+   
+
+
+
     void Start()
     {
         CinemachineCamera.Follow = gameObject.transform;
@@ -78,10 +85,11 @@ public class playerController : MonoBehaviour
         cameraTarget.transform.position = gameObject.transform.position;
 
         // Stop all particle systems
-        thruster1.Stop();
-        thruster2.Stop();
-        thruster3.Stop();
-        thruster4.Stop();
+
+        foreach (var thruster in thrusters)
+        {
+            thruster.Stop();
+        }
     }
     void updateArm()
     {
@@ -237,10 +245,10 @@ public class playerController : MonoBehaviour
         transform.eulerAngles = new Vector3(0, 0, 0);
 
         if (!movementEnabled) {
-            thruster1.Stop();
-            thruster2.Stop();
-            thruster3.Stop();
-            thruster4.Stop();
+        foreach(var thruster in thrusters)
+            {
+                thruster.Stop();
+            }
 
             return;
         };
@@ -248,54 +256,54 @@ public class playerController : MonoBehaviour
         if (Input.GetKey(KeyCode.W))
         {
             rb2D.AddForce(transform.up * thrust);
-            thruster4.Play();
-            thrusterLight4.SetActive(true);
+            thrusters[3].Play();
+            thrusterLights[3].SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.S))
         {
             rb2D.AddForce(-transform.up * thrust);
-            thruster2.Play();
-            thrusterLight2.SetActive(true);
+            thrusters[1].Play();
+            thrusterLights[1].SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.A))
         {
             rb2D.AddForce(-transform.right * thrust);
-            thruster3.Play();
-            thrusterLight3.SetActive(true);
+            thrusters[2].Play();
+            thrusterLights[2].SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.D))
         {
             rb2D.AddForce(transform.right * thrust);
-            thruster1.Play();
-            thrusterLight1.SetActive(true);
+            thrusters[0].Play();
+            thrusterLights[0].SetActive(true);
         }
 
         // Stop all particle systems
         if (!Input.GetKey(KeyCode.W))
         {
-            thruster4.Stop();
-            thrusterLight4.SetActive(false);
+            thrusters[3].Stop();
+            thrusterLights[3].SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.S))
         {
-            thruster2.Stop();
-            thrusterLight2.SetActive(false);
+            thrusters[2].Stop();
+            thrusterLights[2].SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.A))
         {
-            thruster3.Stop();
-            thrusterLight3.SetActive(false);
+            thrusters[2].Stop();
+            thrusterLights[2].SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.D))
         {
-            thruster1.Stop();
-            thrusterLight1.SetActive(false);
+            thrusters[0].Stop();
+            thrusterLights[0].SetActive(false);
         }
     }
 
@@ -351,10 +359,12 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (cutSceneScript.doneTyping)
+       /* if (cutSceneScript.doneTyping)
         {
-            updateCamera();
+            
         }
+       */
+        updateCamera();
 
         updateMovement();
     }
