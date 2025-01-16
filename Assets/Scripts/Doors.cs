@@ -1,6 +1,3 @@
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Antlr3.Runtime;
 using UnityEngine;
 
 public class Doors :MonoBehaviour
@@ -11,74 +8,98 @@ public class Doors :MonoBehaviour
     public float doorPivotMultiplier;
     public float doorOpenDistance;
     public float moveSpeed = 1f;
+    public float doorAutoOpenDistance;
     public bool doorOpen = false;
+    public bool doorAutoOpen = false;
 
     private Vector3 door1StartPos;
     private Vector3 door2StartPos;
+    private Vector3 doorOpenDistanceVec;
     private float factor = 0f;
     private float timeSinceLastActivation;
+    private float doorRotationY;
+    private float doorRotationX;
+    private float distanceToPlayer;
     private bool isMoving;
     private bool isOpen;
+    private bool checkSide;
     private Vector3 pivotRotation;
-
-    bool opening;
 
     private void Start()
     {
         door1StartPos = door1.transform.position;
         door2StartPos = door2.transform.position;
         pivotRotation = gameObject.transform.eulerAngles;
+        distanceToPlayer = Vector3.Distance(gameObject.transform.position, player.transform.position) * doorPivotMultiplier;
     }
 
     private void Update()
     {
-        Debug.Log(pivotRotation);
-        float distanceToPlayer = Vector3.Distance(gameObject.transform.position, player.transform.position) * doorPivotMultiplier;
+        float angleToPlayer = Vector3.Angle(new Vector3(0, 1, 0), gameObject.transform.position - player.transform.position);
 
-        if (Vector3.Angle(new Vector3(0, 1, 0), gameObject.transform.position - player.transform.position) < 90 && pivotRotation.x == -90)
+        //set values depending on door rotation
+        if (pivotRotation.x == 0)
         {
-            gameObject.transform.rotation = Quaternion.Euler(new Vector3(distanceToPlayer - 90, 0, 0));
+            doorRotationY = distanceToPlayer;
+            doorRotationX = 0;
+            checkSide = player.transform.position.x - gameObject.transform.position.x < 0;
+            doorOpenDistanceVec = new Vector3(0, doorOpenDistance, 0);
         }
-        else if (Vector3.Angle(new Vector3(0, 1, 0), gameObject.transform.position - player.transform.position) > 90 && pivotRotation.x == -90)
+        else
         {
-            gameObject.transform.rotation = Quaternion.Euler(new Vector3(-distanceToPlayer - 90, 0, 0));
+            doorRotationY = 0;
+            doorRotationX = distanceToPlayer;
+            checkSide = angleToPlayer < 90;
+            doorOpenDistanceVec = new Vector3(-doorOpenDistance, 0, 0);
         }
 
-        if (Vector3.Angle(new Vector3(1, 0, 0), gameObject.transform.position - player.transform.position) < 90 && pivotRotation.x == 0)
+        //check what side of the door player is
+        if (checkSide == true)
         {
-            gameObject.transform.rotation = Quaternion.Euler(new Vector3(0, distanceToPlayer, 0) + pivotRotation);
+            gameObject.transform.rotation = Quaternion.Euler(new Vector3(doorRotationX, -doorRotationY, 0) + pivotRotation);
         }
-        else if (Vector3.Angle(new Vector3(1, 0, 0), gameObject.transform.position - player.transform.position) > 90 && pivotRotation.x == -90)
+        else
         {
-            gameObject.transform.rotation = Quaternion.Euler(new Vector3(0, -distanceToPlayer, 0) + pivotRotation);
+            gameObject.transform.rotation = Quaternion.Euler(new Vector3(-doorRotationX, doorRotationY, 0) + pivotRotation);
         }
     }
 
     private void FixedUpdate()
     {
+        //autodoor check
+        if (doorAutoOpen == true && distanceToPlayer < doorAutoOpenDistance)
+        {
+            doorOpen = true;
+        }
+        else if (doorAutoOpen == true && distanceToPlayer > doorAutoOpenDistance)
+        {
+            doorOpen = false;
+        }
+
+        //is door open/closed
         if (!isMoving && doorOpen != isOpen && Time.time - timeSinceLastActivation > moveSpeed)
         {
             isMoving = true;
             factor = 0f;
         }
 
+        //move door to current state
         if (isMoving)
         {
-            // Increase factor over time
             factor += Time.deltaTime * moveSpeed;
             factor = Mathf.Clamp01(factor);
 
             if (doorOpen)
             {
                 // Open doors
-                door1.transform.position = Vector3.Lerp(door1StartPos, door1StartPos + new Vector3(doorOpenDistance * 0.5f, 0, 0), factor);
-                door2.transform.position = Vector3.Lerp(door2StartPos, door2StartPos + new Vector3(-doorOpenDistance * 0.5f, 0, 0), factor);
+                door1.transform.position = Vector3.Lerp(door1StartPos, door1StartPos - doorOpenDistanceVec, factor);
+                door2.transform.position = Vector3.Lerp(door2StartPos, door2StartPos + doorOpenDistanceVec, factor);
             }
             else
             {
                 // Close doors
-                door1.transform.position = Vector3.Lerp(door1StartPos + new Vector3(doorOpenDistance * 0.5f, 0, 0), door1StartPos, factor);
-                door2.transform.position = Vector3.Lerp(door2StartPos + new Vector3(-doorOpenDistance * 0.5f, 0, 0), door2StartPos, factor);
+                door1.transform.position = Vector3.Lerp(door1StartPos - doorOpenDistanceVec, door1StartPos, factor);
+                door2.transform.position = Vector3.Lerp(door2StartPos + doorOpenDistanceVec, door2StartPos, factor);
             }
 
             // Check if the movement is complete
