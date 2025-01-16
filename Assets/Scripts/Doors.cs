@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class Doors :MonoBehaviour
+public class Doors : MonoBehaviour
 {
     public GameObject player;
     public GameObject door1;
