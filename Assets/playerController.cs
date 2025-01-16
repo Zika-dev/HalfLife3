@@ -307,18 +307,18 @@ public class playerController : MonoBehaviour
             {
                 cameraTarget.transform.position = targetPosition;
                 CinemachineCamera.Follow = cameraTarget.transform;
-                print("Camera locked and following target");
+                //print("Camera locked and following target");
             }
             else
             {
                 CinemachineCamera.Follow = gameObject.transform;
-                print("Camera locked but too close to follow target");
+                //print("Camera locked but too close to follow target");
             }
         }
         else
         {
             CinemachineCamera.Follow = gameObject.transform;
-            print("Camera unlocked");
+            //print("Camera unlocked");
         }
     }
 

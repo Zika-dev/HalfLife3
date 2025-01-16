@@ -8,8 +8,9 @@ public class WireScript : MonoBehaviour
     public Vector2 connectionPoint = Vector2.up * 0.5f; // Point at the top of the box
     public float unplugRadius = 1f; // Distance at which the wire is considered unplugged
 
-    private bool isPluggedIn = false;
+    public bool isPluggedIn = false;
     private Rigidbody2D pluggedWire;
+    public Rigidbody2D usablePluggedWire;
 
     private void FixedUpdate()
     {
@@ -72,6 +73,8 @@ public class WireScript : MonoBehaviour
     {
         isPluggedIn = true;
         pluggedWire = wire;
+        usablePluggedWire = wire;
+        SendMessageUpwards("setActive", wire);
         Debug.Log("Wire plugged in!");
     }
 
@@ -79,6 +82,8 @@ public class WireScript : MonoBehaviour
     {
         isPluggedIn = false;
         pluggedWire = null;
+        usablePluggedWire = null;
+        SendMessageUpwards("setInActive");
         Debug.Log("Wire unplugged!");
     }
 
