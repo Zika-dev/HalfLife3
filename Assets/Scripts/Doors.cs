@@ -1,10 +1,13 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 public class Doors : MonoBehaviour
 {
     public GameObject player;
     public GameObject door1;
     public GameObject door2;
+    public AudioSource audioSource;
+    public AudioClip DoorSFX;
     public float doorPivotMultiplier;
     public float doorOpenDistance;
     public float moveSpeed = 1f;
@@ -27,6 +30,7 @@ public class Doors : MonoBehaviour
 
     private void Start()
     {
+        audioSource = GetComponent<AudioSource>();
         door1StartPos = door1.transform.position;
         door2StartPos = door2.transform.position;
         pivotRotation = gameObject.transform.eulerAngles;
@@ -75,6 +79,7 @@ public class Doors : MonoBehaviour
 
         if (!isMoving && doorOpen != isOpen && Time.time - timeSinceLastActivation > moveSpeed)
         {
+            audioSource.PlayOneShot(DoorSFX, 0.5f);
             isMoving = true;
             factor = 0f;
         }

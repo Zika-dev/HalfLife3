@@ -28,6 +28,13 @@ public class playerController : MonoBehaviour
     public float thrust = 1.0f;
     public bool movementEnabled = true;
 
+    public AudioSource audioSource1;
+    public AudioSource audioSource2;
+    public AudioSource audioSource3;
+    public AudioSource audioSource4;
+    public AudioClip ThrusterSFX;
+    public float volume;
+
     ParticleSystem targetParticles;
     public GameObject repellEffect;
 
@@ -79,9 +86,14 @@ public class playerController : MonoBehaviour
 
         // Stop all particle systems
         thruster1.Stop();
+        audioSource1.Stop();
         thruster2.Stop();
+        audioSource2.Stop();
         thruster3.Stop();
+        audioSource3.Stop();
         thruster4.Stop();
+        audioSource4.Stop();
+
     }
     void updateArm()
     {
@@ -238,9 +250,13 @@ public class playerController : MonoBehaviour
 
         if (!movementEnabled) {
             thruster1.Stop();
+            audioSource1.Stop();
             thruster2.Stop();
+            audioSource2.Stop();
             thruster3.Stop();
+            audioSource3.Stop();
             thruster4.Stop();
+            audioSource4.Stop();
 
             return;
         };
@@ -249,6 +265,10 @@ public class playerController : MonoBehaviour
         {
             rb2D.AddForce(transform.up * thrust);
             thruster4.Play();
+            if (!audioSource4.isPlaying)
+            {
+                audioSource4.PlayOneShot(ThrusterSFX, volume);
+            }
             thrusterLight4.SetActive(true);
         }
 
@@ -256,6 +276,10 @@ public class playerController : MonoBehaviour
         {
             rb2D.AddForce(-transform.up * thrust);
             thruster2.Play();
+            if (!audioSource2.isPlaying)
+            {
+                audioSource2.PlayOneShot(ThrusterSFX, volume);
+            }
             thrusterLight2.SetActive(true);
         }
 
@@ -263,6 +287,10 @@ public class playerController : MonoBehaviour
         {
             rb2D.AddForce(-transform.right * thrust);
             thruster3.Play();
+            if (!audioSource3.isPlaying)
+            {
+                audioSource3.PlayOneShot(ThrusterSFX, volume);
+            }
             thrusterLight3.SetActive(true);
         }
 
@@ -270,6 +298,10 @@ public class playerController : MonoBehaviour
         {
             rb2D.AddForce(transform.right * thrust);
             thruster1.Play();
+            if (!audioSource1.isPlaying)
+            {
+                audioSource1.PlayOneShot(ThrusterSFX, volume);
+            }
             thrusterLight1.SetActive(true);
         }
 
@@ -277,24 +309,28 @@ public class playerController : MonoBehaviour
         if (!Input.GetKey(KeyCode.W))
         {
             thruster4.Stop();
+            audioSource4.Stop();
             thrusterLight4.SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.S))
         {
             thruster2.Stop();
+            audioSource2.Stop();
             thrusterLight2.SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.A))
         {
             thruster3.Stop();
+            audioSource3.Stop();
             thrusterLight3.SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.D))
         {
             thruster1.Stop();
+            audioSource1.Stop();
             thrusterLight1.SetActive(false);
         }
     }
