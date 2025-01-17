@@ -45,7 +45,7 @@ public class playerController : MonoBehaviour
     public float range = 3.0f;
     public float lockRange = 0.1f;
     public float attractStrength = 1f;
-    private bool lockedItem = false;
+    public bool lockedItem = false;
     private bool canRelease = false;
     private bool canAttract = true;
     private GameObject lockedObject;

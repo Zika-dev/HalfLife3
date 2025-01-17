@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -6,27 +7,27 @@ public class FemaleConnector : MonoBehaviour
 {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
 
-    GameObject connectedTo;
-    public Transform plugPos;
+    public GameObject connectedTo;
 
     private Vector2 newTransform;
-    private Quaternion newRotation;
+    public Quaternion newRotation;
+
+    public playerController _playerController;
+
+    public Vector2 newOffset;
+
+    public List<string> acceptedCables;
 
     void Start()
     {
         connectedTo = null;
     }
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        Debug.Log("Collided with " + collision.name);
-        if (collision.name == "MaleConnector")
+        if (acceptedCables.Contains(collision.name))
         {
-            Debug.Log("Connected");
             connectedTo = collision.gameObject;
-
-            newTransform = (Vector2)transform.position - new Vector2(0, 6.0f);
-            newRotation = Quaternion.Euler(55, transform.rotation.y, transform.rotation.z);
+            newTransform = (Vector2)transform.position - newOffset;
         }
     }
 
