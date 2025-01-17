@@ -1,7 +1,7 @@
 using System;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
-using UnityEditor.Rendering;
+
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering.VirtualTexturing;
@@ -160,11 +160,11 @@ public class playerController : MonoBehaviour
                     {
                         Debug.DrawLine(armTip.position, hit.point, Color.magenta);
                         targetParticles.transform.position = hit.point;
-                       // if(!targetParticles.isPlaying)
-                         // targetParticles.Play();
+                        // if(!targetParticles.isPlaying)
+                        // targetParticles.Play();
 
                         Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
-                        float force =  attractStrength / distance;
+                        float force = attractStrength / distance;
                         rigidbody2D.linearVelocity = -directionToObject * force;
 
                         Debug.DrawRay(armTip.position, directionToObject, Color.blue);
@@ -214,7 +214,7 @@ public class playerController : MonoBehaviour
             }
             if (lockedRigidbody2D != null && distance < range)
             {
-              //  if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
+                //  if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
                 //Debug.Log(distance);
                 lockedRigidbody2D.simulated = true;
                 lockedRigidbody2D.linearVelocity = Vector2.zero;
@@ -229,6 +229,7 @@ public class playerController : MonoBehaviour
             instantiatedRepellEffect = null;
         }
     }
+
 
     void updateMovement()
     {

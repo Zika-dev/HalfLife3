@@ -134,7 +134,8 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      Mud_Stain_wbhtahpv_1K_Opacity_0: -1855373359706151832
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
