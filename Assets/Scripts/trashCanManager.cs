@@ -6,31 +6,81 @@ public class TrashCanManager : MonoBehaviour
     public float attractionRadius = 5f;
     public bool machineActive;
 
-    private void FixedUpdate()
+    public string WhatKindOfTrash = "";
+    public Interaction interaction;
+    void Start()
     {
-        if (machineActive)
+        GameObject prompt = GameObject.Find("Promt");
+        if (prompt != null)
         {
-            Collider2D[] interactables = Physics2D.OverlapCircleAll(transform.position, attractionRadius, LayerMask.GetMask("Interactable"));
-
-            foreach (Collider2D interactable in interactables)
+            Transform mainCanvas = prompt.transform.Find("MainCanvas");
+            if (mainCanvas != null)
             {
-                Rigidbody2D rb = interactable.GetComponent<Rigidbody2D>();
-                if (rb != null)
+                Transform border = mainCanvas.Find("Border");
+                if (border != null)
                 {
-                    Vector2 direction = (Vector2)transform.position - rb.position;
-                    rb.AddForce(direction.normalized * attractionForce);
+                    Transform promptFrame = border.Find("PromptFrame");
+                    if (promptFrame != null)
+                    {
+                        interaction = promptFrame.GetComponent<Interaction>();
+                    }
+                    else
+                    {
+                        Debug.Log(";/");
+                    }
+                }
+                else
+                {
+                    Debug.Log("Hm :(");
                 }
             }
+            else
+            {
+                Debug.Log(":(");
+
+            }
+        }
+        else
+        {
+            Debug.Log("asudhai");
+
+        }
+
+        if (interaction == null)
+        {
+            Debug.LogError("Interaction component not found!");
         }
     }
 
+
+
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        Debug.Log(collision.gameObject.name);
         if (collision.gameObject.CompareTag("Interactable"))
         {
             if (machineActive)
             {
-                Destroy(collision.gameObject);
+                var tr = collision.gameObject.GetComponent<Trashh>();
+
+                if (tr != null)
+                {
+
+                    string tash = tr.Trash;
+
+
+                    Destroy(collision.gameObject);
+                    if(tash != WhatKindOfTrash)
+                        interaction.StartTextInteraction("Go Fuck Yourself", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
+
+
+
+
+                }
+                else
+                {
+                    Debug.Log(":(");
+                }
             }
         }
     }

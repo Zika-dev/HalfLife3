@@ -7,9 +7,9 @@ public class PromtTrigger : MonoBehaviour
     public Vector2 location;
     public float typespeed;
     public Vector2 size;
-    public Interaction interaction;
+    private Interaction interaction;
   
-    public bool alreadyUsed;
+    
     
 
     void Start()
@@ -58,22 +58,13 @@ public class PromtTrigger : MonoBehaviour
 
 
 
-    // Update is called once per frame
-    void Update()
-    {
-        if (alreadyUsed)
-        {
-            Destroy(gameObject);
-        }
-    }
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.name == "robotBody")
         {
             interaction.StartTextInteraction(text, location, typespeed, size);
-            alreadyUsed = true;
-           
+            Destroy(gameObject);
+
 
         }
        

@@ -160,8 +160,8 @@ public class playerController : MonoBehaviour
                     {
                         Debug.DrawLine(armTip.position, hit.point, Color.magenta);
                         targetParticles.transform.position = hit.point;
-                        if(!targetParticles.isPlaying)
-                            targetParticles.Play();
+                       // if(!targetParticles.isPlaying)
+                         // targetParticles.Play();
 
                         Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
                         float force =  attractStrength / distance;
@@ -172,7 +172,7 @@ public class playerController : MonoBehaviour
                     // Lock object if within very close range
                     else if (distance < lockRange)
                     {
-                        targetParticles.Stop();
+                        //targetParticles.Stop();
                         lockedObject = obj;
                         lockedItem = true;
                         canRelease = false;  // Require mouse release before allowing release
@@ -214,7 +214,7 @@ public class playerController : MonoBehaviour
             }
             if (lockedRigidbody2D != null && distance < range)
             {
-                if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
+              //  if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
                 //Debug.Log(distance);
                 lockedRigidbody2D.simulated = true;
                 lockedRigidbody2D.linearVelocity = Vector2.zero;
