@@ -20,6 +20,7 @@ public class GasCanister : MonoBehaviour
     public float minAngle = 15f;
 
     public GameObject explosionEffectPrefab;
+    public GameObject replacementPrefab;
 
     private bool isReleasingGas = false;
     private float currentSpeed = 0f;
@@ -125,8 +126,32 @@ public class GasCanister : MonoBehaviour
         CreateExplosion();
         InstantiateExplosionEffect();
 
+        if (replacementPrefab != null)
+        {
+            GameObject splinteredCanister = Instantiate(replacementPrefab, transform.position, transform.rotation);
+
+            Rigidbody2D[] childRigidbodies = splinteredCanister.GetComponentsInChildren<Rigidbody2D>();
+
+            foreach (Rigidbody2D childRb in childRigidbodies)
+            {
+                childRb.transform.SetParent(null);
+
+                Vector2 explosionDir = (childRb.transform.position - transform.position).normalized;
+                float distance = Vector2.Distance(childRb.transform.position, transform.position);
+                float explosionStrength = Mathf.Lerp(explosionForce, explosionForce / 2, distance / explosionRadius);
+
+                childRb.AddForce((explosionDir * explosionStrength) / 2, ForceMode2D.Impulse);
+
+                childRb.AddTorque(Random.Range(-10f, 10f), ForceMode2D.Impulse);
+            }
+
+            Destroy(splinteredCanister, 0.1f);
+        }
+
         Destroy(gameObject);
     }
+
+
 
 
     private void CreateExplosion()
