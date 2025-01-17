@@ -148,7 +148,7 @@ public class playerController : MonoBehaviour
             // Hold object at the arm tip
             lockedObject.transform.position = armTip.position;
             Rigidbody2D rigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
-            rigidbody2D.simulated = false;  // Disable physics simulation while holding
+            //rigidbody2D.simulated = false;  // Disable physics simulation while holding
         }
 
         // Check if the player has released the right mouse button
@@ -175,7 +175,6 @@ public class playerController : MonoBehaviour
                     GameObject obj = hit.collider.gameObject;
                     Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
                     if (rigidbody2D == null) return;
-                    
 
                     float distance = Vector2.Distance(armTip.position, obj.transform.position);
 

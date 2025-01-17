@@ -4,10 +4,10 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-public class Interaction : MonoBehaviour,  IDragHandler
+public class Interaction : MonoBehaviour, IDragHandler
 {
 
-    [Header("Image Related Settings")] 
+    [Header("Image Related Settings")]
     public Image Border;
     public RawImage image;
     public TextMeshProUGUI textLabel;
@@ -29,7 +29,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
     public float timeUntilDissapear = 5f;
 
     private Material material;
- 
+
     public float originalTimerValue = 0.5f;
     public float fontSizeScale = 5f;
 
@@ -45,8 +45,8 @@ public class Interaction : MonoBehaviour,  IDragHandler
     public bool Dissapear = false;
     void IDragHandler.OnDrag(PointerEventData eventData)
     {
-        if(Drag_Position)
-        Border.rectTransform.anchoredPosition += eventData.delta / canvasRectTransform.scaleFactor;
+        if (Drag_Position)
+            Border.rectTransform.anchoredPosition += eventData.delta / canvasRectTransform.scaleFactor;
 
 
         if (Drag_Size)
@@ -69,21 +69,21 @@ public class Interaction : MonoBehaviour,  IDragHandler
     {
         material = rawImage.material;
         material.SetColor("_Color", selectedColor);
+        DissapearNOW();
         //StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
         //StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(140, 50));
-        EndInteraction();
 
     }
 
 
- private void Update()
+    private void Update()
     {
         if (Refresh && !debounce)
         {
             StartCoroutine(EndInteraction());
             debounce = true;
 
-           
+
 
         }
       
@@ -91,7 +91,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
         float imageWidth = rawImage.rectTransform.rect.width;
         float imageHeight = rawImage.rectTransform.rect.height;
 
-        textLabel.fontSize = Mathf.RoundToInt(Mathf.Min(imageWidth, imageHeight) / fontSizeScale );
+        textLabel.fontSize = Mathf.RoundToInt(Mathf.Min(imageWidth, imageHeight) / fontSizeScale);
         material.SetColor("_Color", selectedColor);
     }
 
@@ -126,11 +126,11 @@ public class Interaction : MonoBehaviour,  IDragHandler
                 rawImage.texture = null;
                 textLabel.text = "> No Texture Available";
             }
-         
+
 
             rawImage.rectTransform.anchoredPosition = position;
-           Border.rectTransform.sizeDelta = size;
-           rawImage.rectTransform.sizeDelta = size;
+            Border.rectTransform.sizeDelta = size;
+            rawImage.rectTransform.sizeDelta = size;
 
 
             StartCoroutine(AnimateImageAppearance());
@@ -140,7 +140,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
     private IEnumerator AnimateImageAppearance()
     {
 
-        
+
         float elapsedTime = 0f;
         Vector2 initialSize = new Vector2(0, 0);
         Vector2 targetSize = rawImage.rectTransform.sizeDelta;
@@ -159,7 +159,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
         }
 
         float expansionDuration = originalTimerValue;
-         elapsedTime = 0f;
+        elapsedTime = 0f;
 
 
 
@@ -184,7 +184,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
 
             if (typeSpeed <= 0)
             { Debug.LogWarning("Typing Speed is cannot be 0 or lower. Typing Speed is now 0.2"); typeSpeed = TypingSpeed; }
-            if(textInput == null || textInput == "")
+            if (textInput == null || textInput == "")
             {
                 Debug.LogWarning("Text Input is NULL or Empty. Text is now 'No Prompt Available'"); textInput = "No Prompt Available";
             }
@@ -210,7 +210,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
 
     public IEnumerator StartTypeANDExpand(string text, Vector2 pos, float speed)
     {
-        
+
         CanBeInteractedWith = true;
         image.gameObject.SetActive(true);
         Border.gameObject.SetActive(true);
@@ -271,7 +271,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
 
         float time = 0f;
 
-        while(time < timeUntilDissapear)
+        while (time < timeUntilDissapear)
         {
             time += Time.deltaTime;
 
@@ -322,7 +322,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
         image.rectTransform.sizeDelta = new Vector2(0, 0);
 
 
-
+        
 
 
         CanBeInteractedWith = true;
@@ -330,7 +330,7 @@ public class Interaction : MonoBehaviour,  IDragHandler
         Refresh = false;
 
 
-        //if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp,TypingSpeed, sizeInp); }
+        //if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp, TypingSpeed, sizeInp); }
 
     }
 
@@ -343,6 +343,4 @@ public class Interaction : MonoBehaviour,  IDragHandler
         Refresh = false;
 
     }
-
-
 }

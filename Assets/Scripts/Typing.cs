@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class Typing : MonoBehaviour
 {
+    public AudioSource audioSource;
+    public AudioClip KeyboardClack;
+
+
     public float TypingSpeed = 0.8f;
     public TextMeshProUGUI textLabel;
     private string text = "Booting....\n \n  All systems operational\n \n  Machine ID: RE-03,VER:3.26\n \n  Objective: maintenance\n  Location: main charging depot\n  Power: 100%\n  Status: awaiting assignemt\n \n  Releasing constraints\n \n  press: [space]";
@@ -32,6 +36,15 @@ public class Typing : MonoBehaviour
         bool includeArrow = true;
         for (int i = 0; i <= text.Length; i++)
         {
+            float rndvolume = Random.Range(0.05f, 0.4f);
+            float rndvalue = Random.Range(1, 3);
+
+            if (rndvalue == 1)
+            {
+                audioSource.PlayOneShot(KeyboardClack, rndvolume);
+            }
+            
+
             textLabel.text = includeArrow ? $"> {text.Substring(0, i)}" : $"  {text.Substring(0, i)}";
             includeArrow = !includeArrow;
 
