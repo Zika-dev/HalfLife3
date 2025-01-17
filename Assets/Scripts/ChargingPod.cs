@@ -171,6 +171,19 @@ public class ChargingPod : MonoBehaviour
         }
     }
 
+
+    IEnumerator HealPlayer(float healingAmount, Vector3 chargepodLocation)
+    {
+        while (healingAmount > 0 && damageBehavior.MaxHealth > damageBehavior.CurrentHealth)
+        {
+            damageBehavior.HealDamage(damageBehavior.MaxHealth /50, chargepodLocation);
+            healingAmount--;
+            yield return new WaitForSeconds(0.1f);
+        }
+
+
+    }
+
     public void doorFullyOpen()
     {
         // Stop charging
