@@ -69,9 +69,9 @@ public class Interaction : MonoBehaviour, IDragHandler
     {
         material = rawImage.material;
         material.SetColor("_Color", selectedColor);
-        DissapearNOW();
         //StartTextInteraction("cyka blyatt", new Vector2(0,0),  0.2f);
         //StartImageInteraction(example, new Vector2(-51, -62.9f), new Vector2(140, 50));
+        EndInteraction();
 
     }
 
@@ -86,8 +86,7 @@ public class Interaction : MonoBehaviour, IDragHandler
 
 
         }
-
-
+      
 
         float imageWidth = rawImage.rectTransform.rect.width;
         float imageHeight = rawImage.rectTransform.rect.height;
@@ -272,7 +271,7 @@ public class Interaction : MonoBehaviour, IDragHandler
 
         float time = 0f;
 
-        while (time < timeUntilDissapear)
+        while(time < timeUntilDissapear)
         {
             time += Time.deltaTime;
 
@@ -331,7 +330,7 @@ public class Interaction : MonoBehaviour, IDragHandler
         Refresh = false;
 
 
-        //if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp, TypingSpeed, sizeInp); }
+        //if (isImage) { StartImageInteraction(ImageInp, posInp, sizeInp); } else { StartTextInteraction(TextInp, posInp,TypingSpeed, sizeInp); }
 
     }
 
@@ -344,4 +343,6 @@ public class Interaction : MonoBehaviour, IDragHandler
         Refresh = false;
 
     }
+
+
 }
