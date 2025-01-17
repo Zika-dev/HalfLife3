@@ -14,9 +14,11 @@ public class TrashCanManager : MonoBehaviour
     private int fansCollected;
     private int cogsCollected;
     private int mistakes;
+    private int DoneWithTask;
     public string WhatKindOfTrash = "";
     public Interaction interaction;
     private Texture Texture;
+    public DoneWithTask doneWithTask;
     void Start()
     {
 
@@ -26,9 +28,9 @@ public class TrashCanManager : MonoBehaviour
         {
             string assetPath = AssetDatabase.GUIDToAssetPath(guids[0]);
             Texture texture = AssetDatabase.LoadAssetAtPath<Texture>(assetPath);
-           
+
         }
-        
+
         GameObject prompt = GameObject.Find("Promt");
         if (prompt != null)
         {
@@ -43,20 +45,20 @@ public class TrashCanManager : MonoBehaviour
                     {
                         interaction = promptFrame.GetComponent<Interaction>();
                     }
-                   
-                }
-               
-            }
-            
-        }
-       
 
-       
+                }
+
+            }
+
+        }
+
+
+
 
 
         GameObject[] cogs = Resources.FindObjectsOfTypeAll<GameObject>();
         int numberOfCogs = cogs.Count(cog => cog.name == "Cog");
-       MaxCogs = numberOfCogs;
+        MaxCogs = numberOfCogs;
         GameObject[] fans = Resources.FindObjectsOfTypeAll<GameObject>();
         int numberOffans = fans.Count(fans => fans.name == "Fan");
         MaxFans = numberOffans;
@@ -65,6 +67,7 @@ public class TrashCanManager : MonoBehaviour
     }
 
 
+ 
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
@@ -82,48 +85,26 @@ public class TrashCanManager : MonoBehaviour
 
 
                     Destroy(collision.gameObject);
-                  
-                    if(tash == WhatKindOfTrash)
+                    doneWithTask.TaskCounter++;
+                    if (tash == WhatKindOfTrash)
                     {
+                        
                         if (WhatKindOfTrash == "Fan")
                         {
-                            fansCollected++;
-                            interaction.StartTextInteraction($"Nice, there are {MaxFans - fansCollected} left!", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
+                            interaction.StartTextInteraction("object recognized: Fan\n object correctly sorted", new Vector2(1000, 400), 0.1f, new Vector2(700, 100));
                         }
-                        if(WhatKindOfTrash == "Cog")
+                        if (WhatKindOfTrash == "Cog")
                         {
-                            cogsCollected++;
-                            interaction.StartTextInteraction($"Nice, there are {MaxCogs - cogsCollected} left!", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
+                            interaction.StartTextInteraction("object recognized: Cog\n object correctly sorted", new Vector2(1000, 400), 0.1f, new Vector2(700, 100));
                         }
 
 
                     }
-                   
+
                     else
                     {
-                        mistakes++;
+                        interaction.StartTextInteraction("object incorrectly sorted \n this will negatively affect your end of day performance review", new Vector2(1000, 400), 0.1f, new Vector2(1000, 100));
 
-                        switch (mistakes)
-                        {
-                            case 1:
-                                interaction.StartTextInteraction("You need to be more carefull, these mistakes damage the ship's internal!", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
-                                break;
-                            case 2:
-                                interaction.StartTextInteraction("This is the second time doing this! Don't be shocked when you get a bill in the mail", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
-                                break;
-                         //   case 3:
-                              //  interaction.StartTextInteraction("Some safety messures are being sent out", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
-                               // break;
-                            case 4:
-                                interaction.StartTextInteraction("You'll never be forgiven for this", new Vector2(579, 426), 0.1f, new Vector2(400, 80));
-                                break;
-                            case 5:
-                                interaction.StartImageInteraction(Texture, new Vector2(579, 426), new Vector2(400, 80));
-                                break;
-                        }
-                       
-
-                        
                     }
 
 
@@ -131,7 +112,7 @@ public class TrashCanManager : MonoBehaviour
                 }
                 else
                 {
-                    Debug.Log(":(");
+                    Debug.Log("error");
                 }
             }
         }
