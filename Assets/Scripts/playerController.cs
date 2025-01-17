@@ -351,10 +351,9 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (cutSceneScript.doneTyping)
-        {
+       
             updateCamera();
-        }
+        
 
         updateMovement();
     }
