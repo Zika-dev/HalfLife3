@@ -497,7 +497,7 @@ MonoBehaviour:
   moveSpeed: 1
   doorAutoOpenDistance: 9.6
   doorOpen: 0
-  doorAutoOpen: 0
+  doorAutoOpen: 1
 --- !u!82 &9081382142845080806
 AudioSource:
   m_ObjectHideFlags: 0
