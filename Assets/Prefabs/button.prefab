@@ -209,9 +209,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   doorScript: {fileID: 0}
-  pressDistance: 0.5
-  returnDelay: 1
-  speed: 1
+  pressDistance: 0.3
+  returnDelay: 0.3
+  speed: 0.2
 --- !u!1 &8242599945992369890
 GameObject:
   m_ObjectHideFlags: 0

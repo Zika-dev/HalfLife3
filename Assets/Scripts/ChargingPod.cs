@@ -15,6 +15,9 @@ public class ChargingPod : MonoBehaviour
     public Transform armRestPos;
     public Transform exitPoint;
 
+    public AudioSource audioSource;
+    public AudioClip ChargePodGas;
+
     public HingeJoint2D armLeft;
     public HingeJoint2D armRight;
 
@@ -158,7 +161,9 @@ public class ChargingPod : MonoBehaviour
             podIdle.SetActive(false);
             podCharging.SetActive(true);
             smoke.Play();
-            
+
+            audioSource.PlayOneShot(ChargePodGas, 0.5f);
+
             damageBehavior.health = 3;
             StartCoroutine(stopSmoke());
 
@@ -171,6 +176,7 @@ public class ChargingPod : MonoBehaviour
         // Stop charging
         podIdle.SetActive(true);
         podCharging.SetActive(false);
+
 
         openArms();
 

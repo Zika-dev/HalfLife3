@@ -1,64 +1,67 @@
-using System;
 using Unity.Cinemachine;
 using Unity.VisualScripting;
-
 using UnityEngine;
-using UnityEngine.InputSystem;
-using UnityEngine.Rendering.VirtualTexturing;
-using UnityEngine.UIElements;
 
 public class playerController : MonoBehaviour
 {
-    [SerializeField] FieldOfView fieldOfView;
+    
+    [SerializeField] private FieldOfView fieldOfView;
 
+    [Header("Movement and Physics")]
     private Rigidbody2D rb2D;
+    public float thrust = 1.0f;
+    public bool movementEnabled = true;
+    [Space]
+    [Header("Arm Control")]
     public Transform armTarget;
     public Transform armTip;
     public Transform rotationPoint;
     public GameObject elbowRaycast;
+    [Space]
+    [Header("Camera Control")]
     public Camera camera;
     public GameObject cameraTarget;
+    public CinemachineCamera CinemachineCamera;
     public float maxCameraDistanceX;
     public float maxCameraDistanceY;
     public float minCameraDistanceX;
     public float minCameraDistanceY;
     private bool cameraLock;
-    public CinemachineCamera CinemachineCamera;
+    [Space]
 
-    public float thrust = 1.0f;
-    public bool movementEnabled = true;
-
-    ParticleSystem targetParticles;
-    public GameObject repellEffect;
-
-    public ParticleSystem thruster1;
-    public ParticleSystem thruster2;
-    public ParticleSystem thruster3;
-    public ParticleSystem thruster4;
-    public GameObject thrusterLight1;
-    public GameObject thrusterLight2;
-    public GameObject thrusterLight3;
-    public GameObject thrusterLight4;
-
+    [Header("Mouse Input")]
     private Vector3 mousePos;
 
+    [Header("Thrusters and Effects")]
+    public ParticleSystem[] thrusters;
+    public GameObject[] thrusterLights;
+    public ParticleSystem targetParticles;
+    public GameObject attractionParticles;
+    private GameObject instantiatedAttractionParticles;
+    public GameObject repellEffect;
+    private GameObject instantiatedRepellEffect;
+    [Space]
+    [Header("Object Interaction")]
     public float range = 3.0f;
     public float lockRange = 0.1f;
     public float attractStrength = 1f;
     private bool lockedItem = false;
-    GameObject lockedObject;
-    public Rigidbody2D lockedRigidbody2D;
-
-    public Typing cutSceneScript;
-
     private bool canRelease = false;
     private bool canAttract = true;
-
-    private GameObject instantiatedRepellEffect;
+    private GameObject lockedObject;
+    public Rigidbody2D lockedRigidbody2D;
+    [Space]
+    [Header("Collision and Preventers")]
     public LayerMask collisonIgnore;
     public GameObject clipPreventor;
     public GameObject pivot;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Space]
+    [Header("Miscellaneous")]
+    public Typing cutSceneScript;
+   
+
+
+
     void Start()
     {
         CinemachineCamera.Follow = gameObject.transform;
@@ -78,10 +81,11 @@ public class playerController : MonoBehaviour
         cameraTarget.transform.position = gameObject.transform.position;
 
         // Stop all particle systems
-        thruster1.Stop();
-        thruster2.Stop();
-        thruster3.Stop();
-        thruster4.Stop();
+
+        foreach (var thruster in thrusters)
+        {
+            thruster.Stop();
+        }
     }
     void updateArm()
     {
@@ -125,7 +129,7 @@ public class playerController : MonoBehaviour
             // Hold object at the arm tip
             lockedObject.transform.position = armTip.position;
             Rigidbody2D rigidbody2D = lockedObject.GetComponent<Rigidbody2D>();
-            rigidbody2D.simulated = false;  // Disable physics simulation while holding
+            //rigidbody2D.simulated = false;  // Disable physics simulation while holding
         }
 
         // Check if the player has released the right mouse button
@@ -133,9 +137,9 @@ public class playerController : MonoBehaviour
         {
             canRelease = true;
             canAttract = true;
-            if (targetParticles != null)
+            if (instantiatedAttractionParticles != null)
             {
-                targetParticles.Stop();
+                Destroy(instantiatedAttractionParticles);
             }
         }
 
@@ -152,19 +156,27 @@ public class playerController : MonoBehaviour
                     GameObject obj = hit.collider.gameObject;
                     Rigidbody2D rigidbody2D = obj.GetComponent<Rigidbody2D>();
                     if (rigidbody2D == null) return;
-                    targetParticles = obj.GetComponentInChildren<ParticleSystem>();
 
                     float distance = Vector2.Distance(armTip.position, obj.transform.position);
+
                     // Apply attraction force if within range
                     if (distance < range && distance > lockRange)
                     {
                         Debug.DrawLine(armTip.position, hit.point, Color.magenta);
-                        targetParticles.transform.position = hit.point;
-                        // if(!targetParticles.isPlaying)
-                        // targetParticles.Play();
+
+                        if (targetParticles == null)
+                        {
+                            instantiatedAttractionParticles = Instantiate(attractionParticles, obj.transform.position, obj.transform.rotation);
+                            targetParticles = instantiatedAttractionParticles.GetComponent<ParticleSystem>();
+                        }
+
+                        targetParticles.transform.position = obj.transform.position;
+
+                        if(!targetParticles.isPlaying)
+                            targetParticles.Play();
 
                         Vector2 directionToObject = (obj.transform.position - armTip.position).normalized;
-                        float force = attractStrength / distance;
+                        float force =  attractStrength / distance;
                         rigidbody2D.linearVelocity = -directionToObject * force;
 
                         Debug.DrawRay(armTip.position, directionToObject, Color.blue);
@@ -172,12 +184,16 @@ public class playerController : MonoBehaviour
                     // Lock object if within very close range
                     else if (distance < lockRange)
                     {
-                        //targetParticles.Stop();
+                        targetParticles.Stop();
                         lockedObject = obj;
                         lockedItem = true;
                         canRelease = false;  // Require mouse release before allowing release
                         Debug.Log("Object locked");
                     }
+                }
+                else if (targetParticles != null)
+                {
+                    targetParticles.Stop();
                 }
             }
             else if (lockedItem && canRelease)  // Release locked object if allowed
@@ -214,7 +230,7 @@ public class playerController : MonoBehaviour
             }
             if (lockedRigidbody2D != null && distance < range)
             {
-                //  if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
+                if(instantiatedRepellEffect == null) instantiatedRepellEffect = Instantiate(repellEffect, armTip.position, armTip.rotation);
                 //Debug.Log(distance);
                 lockedRigidbody2D.simulated = true;
                 lockedRigidbody2D.linearVelocity = Vector2.zero;
@@ -230,7 +246,6 @@ public class playerController : MonoBehaviour
         }
     }
 
-
     void updateMovement()
     {
         // Lock rotation
@@ -238,10 +253,10 @@ public class playerController : MonoBehaviour
         transform.eulerAngles = new Vector3(0, 0, 0);
 
         if (!movementEnabled) {
-            thruster1.Stop();
-            thruster2.Stop();
-            thruster3.Stop();
-            thruster4.Stop();
+        foreach(var thruster in thrusters)
+            {
+                thruster.Stop();
+            }
 
             return;
         };
@@ -249,54 +264,54 @@ public class playerController : MonoBehaviour
         if (Input.GetKey(KeyCode.W))
         {
             rb2D.AddForce(transform.up * thrust);
-            thruster4.Play();
-            thrusterLight4.SetActive(true);
+            thrusters[3].Play();
+            thrusterLights[3].SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.S))
         {
             rb2D.AddForce(-transform.up * thrust);
-            thruster2.Play();
-            thrusterLight2.SetActive(true);
+            thrusters[1].Play();
+            thrusterLights[1].SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.A))
         {
             rb2D.AddForce(-transform.right * thrust);
-            thruster3.Play();
-            thrusterLight3.SetActive(true);
+            thrusters[2].Play();
+            thrusterLights[2].SetActive(true);
         }
 
         if (Input.GetKey(KeyCode.D))
         {
             rb2D.AddForce(transform.right * thrust);
-            thruster1.Play();
-            thrusterLight1.SetActive(true);
+            thrusters[0].Play();
+            thrusterLights[0].SetActive(true);
         }
 
         // Stop all particle systems
         if (!Input.GetKey(KeyCode.W))
         {
-            thruster4.Stop();
-            thrusterLight4.SetActive(false);
+            thrusters[3].Stop();
+            thrusterLights[3].SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.S))
         {
-            thruster2.Stop();
-            thrusterLight2.SetActive(false);
+            thrusters[2].Stop();
+            thrusterLights[2].SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.A))
         {
-            thruster3.Stop();
-            thrusterLight3.SetActive(false);
+            thrusters[2].Stop();
+            thrusterLights[2].SetActive(false);
         }
 
         if (!Input.GetKey(KeyCode.D))
         {
-            thruster1.Stop();
-            thrusterLight1.SetActive(false);
+            thrusters[0].Stop();
+            thrusterLights[0].SetActive(false);
         }
     }
 
@@ -352,9 +367,12 @@ public class playerController : MonoBehaviour
 
     private void FixedUpdate()
     {
-       
-            updateCamera();
-        
+       /* if (cutSceneScript.doneTyping)
+        {
+            
+        }
+       */
+        updateCamera();
 
         updateMovement();
     }

@@ -86,13 +86,12 @@ public class Interaction : MonoBehaviour, IDragHandler
 
 
         }
-
-
+      
 
         float imageWidth = rawImage.rectTransform.rect.width;
         float imageHeight = rawImage.rectTransform.rect.height;
 
-       // textLabel.fontSize = Mathf.RoundToInt(Mathf.Min(imageWidth, imageHeight) / fontSizeScale);
+        textLabel.fontSize = Mathf.RoundToInt(Mathf.Min(imageWidth, imageHeight) / fontSizeScale);
         material.SetColor("_Color", selectedColor);
     }
 
@@ -115,7 +114,6 @@ public class Interaction : MonoBehaviour, IDragHandler
     {
         if (CanBeInteractedWith)
         {
-            StopAllCoroutines();
             rawImage.gameObject.SetActive(true);
             Border.gameObject.SetActive(true);
             textLabel.text = "";
@@ -191,7 +189,7 @@ public class Interaction : MonoBehaviour, IDragHandler
                 Debug.LogWarning("Text Input is NULL or Empty. Text is now 'No Prompt Available'"); textInput = "No Prompt Available";
             }
             #endregion
-            StopAllCoroutines();
+
             CanBeInteractedWith = false;
             textLabel.text = "";
             rawImage.texture = null;
@@ -261,23 +259,24 @@ public class Interaction : MonoBehaviour, IDragHandler
             includeArrow = !includeArrow;
             yield return new WaitForSeconds(speed);
         }
-        float time = 0f;
-        while (time < timeUntilDissapear)
+        while (!Refresh)
         {
             textLabel.text = includeArrow ? $"> {text}" : $"  {text}";
             includeArrow = !includeArrow;
-            time += 0.5f;
             yield return new WaitForSeconds(0.5f);
         }
-
-
-        StartCoroutine(EndInteraction());
         CanBeInteractedWith = true;
 
 
 
-       
+        float time = 0f;
 
+        while (time < timeUntilDissapear)
+        {
+            time += Time.deltaTime;
+
+        }
+        EndInteraction();
 
 
 
