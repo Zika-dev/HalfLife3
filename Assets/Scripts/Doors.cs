@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Audio;
 
@@ -22,7 +23,7 @@ public class Doors : MonoBehaviour
     private float timeSinceLastActivation;
     private float doorRotationY;
     private float doorRotationX;
-    private float distanceToPlayer;
+    private float doorTilt;
     private bool isMoving;
     private bool isOpen;
     private bool checkSide;
@@ -30,7 +31,6 @@ public class Doors : MonoBehaviour
 
     private void Start()
     {
-        audioSource = GetComponent<AudioSource>();
         door1StartPos = door1.transform.position;
         door2StartPos = door2.transform.position;
         pivotRotation = gameObject.transform.eulerAngles;
@@ -38,36 +38,29 @@ public class Doors : MonoBehaviour
 
     private void Update()
     {
-        float angleToPlayer = Vector3.Angle(new Vector3(0, 1, 0), gameObject.transform.position - player.transform.position);
-        distanceToPlayer = Vector3.Distance(gameObject.transform.position, player.transform.position) * doorPivotMultiplier;
-
         if (pivotRotation.x == 0)
         {
-            doorRotationY = distanceToPlayer;
+            doorRotationY = doorTilt;
             doorRotationX = 0;
             checkSide = player.transform.position.x - gameObject.transform.position.x < 0;
             doorOpenDistanceVec = new Vector3(0, doorOpenDistance, 0);
+            doorTilt = (gameObject.transform.position.x - player.transform.position.x) * doorPivotMultiplier;
         }
         else
         {
             doorRotationY = 0;
-            doorRotationX = distanceToPlayer;
-            checkSide = angleToPlayer < 90;
+            doorRotationX = doorTilt;
+            checkSide = player.transform.position.y - gameObject.transform.position.y < 0;
             doorOpenDistanceVec = new Vector3(-doorOpenDistance, 0, 0);
+            doorTilt = (gameObject.transform.position.y - player.transform.position.y) * doorPivotMultiplier;
         }
 
-        if (checkSide == true)
-        {
-            gameObject.transform.rotation = Quaternion.Euler(new Vector3(doorRotationX, -doorRotationY, 0) + pivotRotation);
-        }
-        else
-        {
-            gameObject.transform.rotation = Quaternion.Euler(new Vector3(-doorRotationX, doorRotationY, 0) + pivotRotation);
-        }
+        gameObject.transform.rotation = Quaternion.Euler(new Vector3(doorRotationX, -doorRotationY, 0) + pivotRotation);
     }
 
     private void FixedUpdate()
     {
+        float distanceToPlayer = Vector3.Distance(gameObject.transform.position, player.transform.position) * 2;
         if (doorAutoOpen == true && distanceToPlayer < doorAutoOpenDistance)
         {
             doorOpen = true;
