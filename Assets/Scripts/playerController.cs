@@ -1,6 +1,6 @@
 using Unity.Cinemachine;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class playerController : MonoBehaviour
 {
@@ -53,8 +53,8 @@ public class playerController : MonoBehaviour
     [Space]
     [Header("Collision and Preventers")]
     public LayerMask collisonIgnore;
-    public GameObject clipPreventor;
-    public GameObject pivot;
+    public LayerMask lightMeshIgnore;
+    public Tilemap tilemap;
     [Space]
     [Header("Miscellaneous")]
     public Typing cutSceneScript;
@@ -87,19 +87,20 @@ public class playerController : MonoBehaviour
             thruster.Stop();
         }
     }
+
     void updateArm()
     {
 
         // Update the target position to follow the mouse
         mousePos = camera.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 50.0f));
 
-        Vector3 currentDirection = (mousePos - armTarget.position).normalized;
+        /*Vector3 currentDirection = (mousePos - armTarget.position).normalized;
 
         RaycastHit2D collision = Physics2D.Raycast(armTip.position, currentDirection, 0.25f, ~collisonIgnore);
 
         Debug.DrawRay(armTip.position, currentDirection, Color.red);
 
-        if (collision.collider != null/* && collision.collider.gameObject.layer != 9 && collision.collider.gameObject.layer != 10*/)
+        if (collision.collider != null/* && collision.collider.gameObject.layer != 9 && collision.collider.gameObject.layer != 10)
         {
             //Debug.Log(collision.collider.gameObject.layer);
             // Smoothly move the solver along the collision surface
@@ -110,14 +111,32 @@ public class playerController : MonoBehaviour
             // If no collision, move normally towards the mouse position
             armTarget.position = Vector3.Lerp(armTarget.position, mousePos, 0.05f);
         }
+        */
 
-        float distanceToArmTip = Vector2.Distance(pivot.transform.position, armTip.position);
+        RaycastHit2D raycastHit = Physics2D.Raycast(armTip.transform.position, mousePos - armTip.transform.position, Vector2.Distance(mousePos, armTip.transform.position), lightMeshIgnore);
+        //Debug.DrawRay(armTip.transform.position, mousePos - armTip.transform.position);
+        RaycastHit2D newPosition = Physics2D.Raycast(gameObject.transform.position, mousePos - gameObject.transform.position, Vector2.Distance(mousePos, gameObject.transform.position), lightMeshIgnore);
+        //Debug.DrawRay(gameObject.transform.position, mousePos - gameObject.transform.position);
+
+        if (raycastHit.collider != null && newPosition.collider != null && raycastHit.transform.gameObject.name == "Tilemap")
+        {
+            /*Debug.DrawLine(newPosition.point - Vector2.right * 1, newPosition.point + Vector2.right * 1, Color.yellow);
+            Debug.DrawLine(newPosition.point - Vector2.up * 1, newPosition.point + Vector2.up * 1, Color.yellow);*/
+
+            armTarget.position = Vector3.Lerp(armTarget.position, newPosition.point, 0.05f);
+        }
+        else
+        {
+            armTarget.position = Vector3.Lerp(armTarget.position, mousePos, 0.05f);
+        }
+
+        /*float distanceToArmTip = Vector2.Distance(pivot.transform.position, armTip.position);
 
         float angle = Mathf.Atan2(armTip.position.y - transform.position.y, armTip.position.x - transform.position.x) * Mathf.Rad2Deg - 90;
         pivot.transform.rotation = Quaternion.Euler(new Vector3(0, 0, angle));
 
         clipPreventor.transform.localScale = new Vector3(clipPreventor.transform.localScale.x, distanceToArmTip, 1);
-        clipPreventor.transform.localPosition = new Vector3(0, distanceToArmTip / 2, 0);
+        clipPreventor.transform.localPosition = new Vector3(0, distanceToArmTip / 2, 0);*/
 
         Vector2 direction = (armTip.position - rotationPoint.position).normalized;
 
