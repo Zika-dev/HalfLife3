@@ -182,8 +182,7 @@ public class ChargingPod : MonoBehaviour
 
         playerLocked = false;
         PlayerController.movementEnabled = true;
-
-
+        timeWent = 0;
     }
 
    
